@@ -1,0 +1,7 @@
+# Reporte Diario de Producción
+Fecha: 2025-11-12
+Línea: L1
+Unidades producidas: 1,250
+Paradas programadas: 0
+Paradas no programadas: 15 min
+Estado: ✅ Operación estable
