@@ -20,7 +20,8 @@ depende de decisiones de infraestructura pendientes.
 | 3. API (FastAPI) | **Completa** — contrato OpenAPI publicado en `contrato/` |
 | 4. Panel de control | **Completo** — React + Vite contra el API real |
 | 5. Lista de gestión y detalle | **Completa** — bandeja priorizada, filtros, búsqueda y ficha de cliente |
-| 6–8 | Pendiente |
+| 6. Gestión y compromisos | **Completa** — registro, estados, compromisos y A12 activa |
+| 7–8 | Pendiente |
 
 ## Estructura
 
@@ -177,7 +178,12 @@ explicarle cómo llegar:
 
 ![Lista de gestión](lista.png)
 
-![Detalle del cliente](cliente.png)
+![Detalle del cliente con gestión](gestion.png)
+
+El detalle permite registrar una gestión y muestra el historial de cobranza con
+sus compromisos de pago. Registrar una gestión **no toca el saldo ni el bucket**:
+§16 separa el estado de la gestión del de la factura, porque una factura sigue
+vencida aunque ya se haya gestionado.
 
 Cada alerta puede explicar por qué se disparó: la regla, el parámetro vigente y
 el valor que la disparó (§7.4). El texto llega hecho del motor; componerlo en el

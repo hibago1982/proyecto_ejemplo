@@ -13,7 +13,7 @@ implementacion. Etapa 1 (motor de reglas) es la unica construida por ahora.
 | C-04 | R04 y R05 son marcadores de cliente (`M04`, `M05`), no alertas de factura. | `core/alerta.py::Marcador` · `motor.py::_emitir_cliente` |
 | C-05 | `pct_mayor_90_umbral` existe como parametro. Sin valor asignado, la regla queda inactiva; el motor no asume ningun defecto. | `core/parametros.py` · `reglas.py::inactiva_porque` |
 | C-06 | Parametros renombrados a `dias_preventivos` (R06) y `dias_sin_gestion` (A12), independientes. | `motores/cartera/reglas.py` |
-| C-07 | A12 declarada como fase 5. No se evalua antes. | `core/tipos.py::Fase` · `reglas.py` |
+| C-07 | A12 declarada como fase 5 y **activada en ella**. El motor recibe el historial de gestion como dato, no lo consulta. Una alerta nueva no dispara, porque no hay desde cuando contar. | `motores/cartera/historial.py` · `reglas.py::_a12_sin_gestion` · `tests/persistencia/test_gestion.py::TestActivacionDeA12` |
 
 ## Vacios de definicion (§3.2)
 
