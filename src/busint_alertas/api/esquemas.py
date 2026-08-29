@@ -98,6 +98,11 @@ class FilaGestion(Modelo):
 
     id: int
     cliente_nit: str
+    cliente_nombre: str = ""
+    """Nombre del cliente. Vive en ar_riesgo_cliente, no en la alerta, asi que
+    se resuelve al armar la respuesta: una bandeja de trabajo con solo NIT
+    obliga al gestor a buscar a quien llama antes de poder llamarlo."""
+
     factura: str
     codigo: str
     etiqueta: str

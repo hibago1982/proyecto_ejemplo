@@ -48,17 +48,21 @@ class FuenteFalsa:
 
 
 @pytest.fixture
-def fabrica():
+def engine():
     """SQLite en memoria compartida entre conexiones.
 
     Sin StaticPool cada conexion abriria su propia base y el API no veria las
     tablas que creo la prueba.
     """
-    engine = crear_engine(
+    return crear_engine(
         "sqlite+pysqlite:///:memory:",
         poolclass=StaticPool,
         connect_args={"check_same_thread": False},
     )
+
+
+@pytest.fixture
+def fabrica(engine):
     crear_esquema(engine)
     F = fabrica_de_sesiones(engine)
     with F() as s:
@@ -73,6 +77,25 @@ def fabrica():
 @pytest.fixture
 def cliente(fabrica):
     return TestClient(crear_app(fabrica, fuente=FuenteFalsa(CARTERA)))
+
+
+@pytest.fixture
+def contar_consultas(engine):
+    """Cuenta las sentencias SQL que coincidan con un texto.
+
+    Sirve para fijar que una pantalla no degenere en N+1 consultas cuando
+    alguien anada un campo mas adelante.
+    """
+    from sqlalchemy import event
+
+    sentencias: list[str] = []
+
+    def registrar(_conn, _cursor, sentencia, *_resto):
+        sentencias.append(sentencia)
+
+    event.listen(engine, "before_cursor_execute", registrar)
+    yield lambda texto: sum(1 for s in sentencias if texto in s)
+    event.remove(engine, "before_cursor_execute", registrar)
 
 
 @pytest.fixture

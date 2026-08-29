@@ -19,7 +19,8 @@ depende de decisiones de infraestructura pendientes.
 | 2. Persistencia (PostgreSQL) | **Completa** — esquema, migraciones, snapshot y cierre por ausencia |
 | 3. API (FastAPI) | **Completa** — contrato OpenAPI publicado en `contrato/` |
 | 4. Panel de control | **Completo** — React + Vite contra el API real |
-| 5–8 | Pendiente |
+| 5. Lista de gestión y detalle | **Completa** — bandeja priorizada, filtros, búsqueda y ficha de cliente |
+| 6–8 | Pendiente |
 
 ## Estructura
 
@@ -160,9 +161,27 @@ Hay una prueba que falla si algun monto se declara `number` en el contrato.
 seguridad.** Es un marcador de posicion: §8.4 exige permisos y C-13 define los
 roles, pero son de la fase 8. Ver la advertencia en `api/dependencias.py`.
 
-## Panel de control
+## Pantallas
 
 ![Panel de cartera](panel.png)
+
+Tres pantallas, cada una con dirección propia en el hash de la URL para que un
+gestor pueda pasarle a su coordinador el enlace de un cliente en vez de
+explicarle cómo llegar:
+
+| Ruta | Pantalla |
+|------|----------|
+| `#/` | Panel de control (§8.1) |
+| `#/gestion` | Lista de gestión (§8.2) |
+| `#/clientes/{nit}` | Detalle del cliente (§8.3) |
+
+![Lista de gestión](lista.png)
+
+![Detalle del cliente](cliente.png)
+
+Cada alerta puede explicar por qué se disparó: la regla, el parámetro vigente y
+el valor que la disparó (§7.4). El texto llega hecho del motor; componerlo en el
+navegador sería reimplementar la regla donde nadie la prueba.
 
 React 18 + TypeScript + Vite, con Tailwind para el sistema de diseño de §7.2,
 TanStack Query para la caché y Recharts para el aging. Los tipos no se escriben

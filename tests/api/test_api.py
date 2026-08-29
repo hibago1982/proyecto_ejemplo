@@ -280,3 +280,25 @@ class TestEjecucion:
         r = c.post("/api/v1/ejecucion", json={"corte": str(CORTE)}, headers=CABECERA)
         assert r.status_code == 502
         assert "el ERP no responde" in r.json()["detail"]
+
+
+class TestNombreDelCliente:
+    """Una bandeja de trabajo con solo NIT obliga a buscar a quien se llama."""
+
+    def test_la_lista_trae_el_nombre(self, cliente_corrido):
+        from .conftest import CABECERA
+
+        lista = cliente_corrido.get("/api/v1/gestion", headers=CABECERA).json()
+        assert all(f["cliente_nombre"] == "Cliente Demo" for f in lista["filas"])
+
+    def test_el_detalle_tambien(self, cliente_corrido):
+        from .conftest import CABECERA
+
+        d = cliente_corrido.get("/api/v1/clientes/900", headers=CABECERA).json()
+        assert all(a["cliente_nombre"] == "Cliente Demo" for a in d["alertas"])
+
+    def test_no_hace_una_consulta_por_fila(self, cliente_corrido, contar_consultas):
+        """El mapa de nombres se trae de una vez: son tantas filas como
+        clientes, no como alertas."""
+        cliente_corrido.get("/api/v1/gestion", headers=CABECERA)
+        assert contar_consultas("ar_riesgo_cliente") == 1

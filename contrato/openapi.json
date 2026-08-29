@@ -526,6 +526,11 @@
             "title": "Cliente Nit",
             "type": "string"
           },
+          "cliente_nombre": {
+            "default": "",
+            "title": "Cliente Nombre",
+            "type": "string"
+          },
           "codigo": {
             "title": "Codigo",
             "type": "string"

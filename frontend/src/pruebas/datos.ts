@@ -1,5 +1,5 @@
 /** Respuestas de ejemplo, con las cifras reales del archivo de prueba. */
-import type { Corte, Panel } from "../api/cliente";
+import type { Corte, DetalleCliente, FilaGestion, ListaGestion, Panel } from "../api/cliente";
 
 export const PANEL: Panel = {
   empresa_id: "E01",
@@ -49,3 +49,87 @@ export const CORTES: Corte[] = [
     n_clientes: 30,
   },
 ];
+
+const FILA: FilaGestion = {
+  id: 1,
+  cliente_nit: "90010001818",
+  cliente_nombre: "TEXTILES DE ANTIOQUIA SAS",
+  factura: "3018",
+  codigo: "A07",
+  etiqueta: "Mora 121-150",
+  bucket: "B06",
+  dias: 150,
+  saldo: "3200000.00",
+  saldo_bruto: null,
+  credito_aplicado: null,
+  prioridad: 3,
+  prioridad_etiqueta: "Muy alta",
+  accion: "Escalar",
+  estado: "activa",
+  explicacion: "B06: la factura esta en el rango 121-150 dias",
+  vendedor: "ANA MARIA RESTREPO",
+  zona: "NACIONAL",
+};
+
+/** Factura con nota credito aplicada: la diferencia contra el ERP debe verse. */
+const FILA_CON_CREDITO: FilaGestion = {
+  ...FILA,
+  id: 2,
+  factura: "3048",
+  codigo: "A04",
+  etiqueta: "Mora 31-60",
+  bucket: "B03",
+  dias: 45,
+  saldo: "600000.00",
+  saldo_bruto: "1000000.00",
+  credito_aplicado: "400000.00",
+  prioridad: 2,
+  prioridad_etiqueta: "Alta",
+  accion: "Cobranza",
+  explicacion: "B03: la factura esta en el rango 31-60 dias",
+};
+
+/** Alerta de cliente: no cuelga de ninguna factura (C-17). */
+const FILA_DE_CLIENTE: FilaGestion = {
+  ...FILA,
+  id: 3,
+  factura: "",
+  codigo: "A10",
+  etiqueta: "Cliente reincidente",
+  bucket: null,
+  dias: null,
+  saldo: null,
+  prioridad: 2,
+  prioridad_etiqueta: "Alta",
+  accion: "Revisar comportamiento",
+  explicacion: "R03: el cliente tiene 4 facturas vencidas (4 contra n_facturas_vencidas=3)",
+};
+
+export const LISTA: ListaGestion = {
+  corte: "2026-08-21",
+  total: 3,
+  pagina: 1,
+  por_pagina: 40,
+  filas: [FILA, FILA_CON_CREDITO, FILA_DE_CLIENTE],
+};
+
+export const DETALLE: DetalleCliente = {
+  cliente_nit: "90010001818",
+  cliente_nombre: "TEXTILES DE ANTIOQUIA SAS",
+  corte: "2026-08-21",
+  cartera_total: "38000000.00",
+  por_vencer: "0.00",
+  vence_hoy: "0.00",
+  vencida: "38000000.00",
+  pct_vencida: "100.00",
+  mayor_90: "9500000.00",
+  pct_90: "25.00",
+  mayor_150: "0.00",
+  dias_max: 150,
+  n_facturas: 4,
+  n_vencidas: 4,
+  prioridad: 3,
+  prioridad_etiqueta: "Muy alta",
+  marcadores: ["M04"],
+  alertas: [FILA, FILA_CON_CREDITO, FILA_DE_CLIENTE],
+};

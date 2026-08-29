@@ -391,6 +391,11 @@ export interface components {
             bucket: string | null;
             /** Cliente Nit */
             cliente_nit: string;
+            /**
+             * Cliente Nombre
+             * @default
+             */
+            cliente_nombre: string;
             /** Codigo */
             codigo: string;
             /** Credito Aplicado */

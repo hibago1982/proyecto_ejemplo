@@ -18,10 +18,12 @@ from ..esquemas import DetalleCliente, FilaGestion, ListaGestion
 router = APIRouter(tags=["gestion"])
 
 
-def _a_fila(alerta) -> FilaGestion:
+def _a_fila(alerta, nombres: dict[str, str] | None = None) -> FilaGestion:
     datos = alerta.datos or {}
     return FilaGestion(
-        id=alerta.id, cliente_nit=alerta.cliente_nit, factura=alerta.factura,
+        id=alerta.id, cliente_nit=alerta.cliente_nit,
+        cliente_nombre=(nombres or {}).get(alerta.cliente_nit, ""),
+        factura=alerta.factura,
         codigo=alerta.codigo, etiqueta=alerta.etiqueta, bucket=alerta.bucket,
         dias=alerta.dias, saldo=alerta.saldo, saldo_bruto=alerta.saldo_bruto,
         credito_aplicado=alerta.credito_aplicado, prioridad=alerta.prioridad,
@@ -53,9 +55,10 @@ def lista(
         zona=zona, estado=estado, busqueda=busqueda, orden=orden,
         pagina=pagina, por_pagina=por_pagina,
     )
+    nombres = consultas.nombres_de_clientes(sesion, empresa_id, corte)
     return ListaGestion(
         corte=corte, total=total, pagina=pagina, por_pagina=por_pagina,
-        filas=[_a_fila(f) for f in filas],
+        filas=[_a_fila(f, nombres) for f in filas],
     )
 
 
@@ -85,5 +88,5 @@ def detalle(
         prioridad=perfil.prioridad,
         prioridad_etiqueta=consultas.etiqueta_prioridad(perfil.prioridad),
         marcadores=list(perfil.marcadores or []),
-        alertas=[_a_fila(a) for a in alertas],
+        alertas=[_a_fila(a, {perfil.cliente_nit: perfil.cliente_nombre}) for a in alertas],
     )

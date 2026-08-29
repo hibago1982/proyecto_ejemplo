@@ -117,6 +117,25 @@ def facturas_por_bucket(
     return {b: n for b, n in filas}
 
 
+def nombres_de_clientes(
+    sesion: Session, empresa_id: str, corte: date
+) -> dict[str, str]:
+    """Nombres por NIT para un corte.
+
+    Se trae el mapa completo de una vez en lugar de consultar por fila: son
+    tantas filas como clientes, no como alertas, y evita el problema de las
+    N+1 consultas en la pantalla mas usada del modulo.
+    """
+    filas = sesion.execute(
+        select(modelo.RiesgoCliente.cliente_nit, modelo.RiesgoCliente.cliente_nombre)
+        .where(
+            modelo.RiesgoCliente.empresa_id == empresa_id,
+            modelo.RiesgoCliente.corte == corte,
+        )
+    ).all()
+    return {nit: nombre or "" for nit, nombre in filas}
+
+
 def buckets_configurados(
     sesion: Session, empresa_id: str
 ) -> Sequence[modelo.AgingParam]:

@@ -3,7 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { crearCliente } from "./api/cliente";
-import { Panel } from "./Panel";
+import { App } from "./App";
 import "./estilos.css";
 
 const clienteConsultas = new QueryClient({
@@ -27,7 +27,7 @@ const cliente = crearCliente({
 createRoot(document.getElementById("raiz")!).render(
   <StrictMode>
     <QueryClientProvider client={clienteConsultas}>
-      <Panel cliente={cliente} />
+      <App cliente={cliente} />
     </QueryClientProvider>
   </StrictMode>,
 );
