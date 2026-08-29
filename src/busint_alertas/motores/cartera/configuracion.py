@@ -23,24 +23,27 @@ from ...core.parametros import Parametros
 from ...core.tipos import Prioridad
 from .buckets import Bucket, ConfiguracionBuckets
 
-#: Buckets de BUSINT, segun las columnas de aging del archivo de prueba (§5.2).
+#: Buckets de antiguedad de §5.2, con sus colores, prioridades y alertas.
+#:
+#: Los rangos coinciden con las columnas de aging del archivo de prueba. Los
+#: colores y prioridades son los de la especificacion, no una eleccion propia.
 BUCKETS_BUSINT: tuple[Bucket, ...] = (
-    Bucket("B00", "Por vencer", None, -1, "#64748B", Prioridad.INFORMATIVA,
-           "Sin accion", orden=0),
-    Bucket("B01", "Vence hoy", 0, 0, "#0EA5E9", Prioridad.MEDIA,
-           "Confirmar pago", orden=1),
-    Bucket("B02", "1 a 30 dias", 1, 30, "#FACC15", Prioridad.MEDIA,
-           "Contactar al cliente", orden=2),
-    Bucket("B03", "31 a 60 dias", 31, 60, "#FB923C", Prioridad.ALTA,
-           "Contactar al cliente", orden=3),
-    Bucket("B04", "61 a 90 dias", 61, 90, "#F97316", Prioridad.ALTA,
-           "Escalar a coordinador", orden=4),
-    Bucket("B05", "91 a 120 dias", 91, 120, "#EF4444", Prioridad.CRITICA,
-           "Escalar a coordinador", orden=5),
-    Bucket("B06", "121 a 150 dias", 121, 150, "#DC2626", Prioridad.CRITICA,
-           "Escalar a coordinador", orden=6),
-    Bucket("B07", "Mas de 150 dias", 151, None, "#991B1B", Prioridad.CRITICA,
-           "Evaluar cobro juridico", orden=7),
+    Bucket("B00", "Por vencer", None, -1, "#2F6B9A", Prioridad.INFORMATIVA,
+           "Seguimiento preventivo", orden=0, alerta=None),
+    Bucket("B01", "Vence hoy", 0, 0, "#B8860B", Prioridad.ALTA,
+           "Gestionar hoy", orden=1, alerta="A02"),
+    Bucket("B02", "1-30 dias", 1, 30, "#B8860B", Prioridad.MEDIA,
+           "Recordatorio/cobro", orden=2, alerta="A03"),
+    Bucket("B03", "31-60 dias", 31, 60, "#E67E22", Prioridad.ALTA,
+           "Cobranza", orden=3, alerta="A04"),
+    Bucket("B04", "61-90 dias", 61, 90, "#D32F2F", Prioridad.ALTA,
+           "Cobranza prioritaria", orden=4, alerta="A05"),
+    Bucket("B05", "91-120 dias", 91, 120, "#9B1C1C", Prioridad.MUY_ALTA,
+           "Escalar", orden=5, alerta="A06"),
+    Bucket("B06", "121-150 dias", 121, 150, "#9B1C1C", Prioridad.MUY_ALTA,
+           "Escalar", orden=6, alerta="A07"),
+    Bucket("B07", "Mas de 150 dias", 151, None, "#641220", Prioridad.CRITICA,
+           "Recuperacion/comite", orden=7, alerta="A08"),
 )
 
 #: Equivalencia con las columnas de aging del ERP, para la exportacion de §9.

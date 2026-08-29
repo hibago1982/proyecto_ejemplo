@@ -1,17 +1,32 @@
 # Pendientes para cerrar la etapa 1
 
-## A. Documentos que faltan
+## A. Estado de la especificacion
 
-El documento de arquitectura v2.0 corrige la **Especificacion Funcional v1.0**
-pero no la reemplaza. Estas partes se citan y no llegaron:
+Con la Especificacion Funcional v1.0 ya no falta ninguna definicion de reglas.
+Lo que cerro:
 
-| Falta | Para que se necesita | Estado en el codigo |
-|-------|----------------------|---------------------|
-| §5.4 — condicion de R01, R02, R04 y R05 | Son 4 de las 6 reglas del motor | Declaradas sin evaluador; inactivas y visibles como pendientes |
-| §5.2 — rangos y paleta de aging | Limites reales de los buckets | Plantilla propuesta en `configuracion.py`, coherente con los cortes de 90 y 150 de §6 |
-| §7 — catalogo completo A01–A12 | Etiquetas y a que regla pertenece cada alerta | Solo A01, A10, A11 y A12 tienen etiqueta |
-| §14 — casos T01–T12 | Es el entregable verificable de la etapa 1 segun §8 | 59 pruebas propias cubren lo que este documento determina |
-| Archivo de prueba (120 facturas / 30 NIT) | Reconciliacion exigida por §8 etapa 1 | Sin hacer |
+| Antes faltaba | Como quedo |
+|---------------|------------|
+| §5.4 — condicion de R01, R02, R04 y R05 | Las seis reglas implementadas con su condicion literal |
+| §5.2 — colores y prioridades de aging | Tomados de la especificacion, no inventados. Aparece el nivel "Muy alta" |
+| §7 — catalogo A01–A12 | Completo. A02–A08 las emiten los buckets, que antes no emitian nada |
+| §14 — casos T01–T12 | `tests/cartera/test_casos_t01_t12.py`, con el enunciado literal de cada uno |
+| §5.3 — saldos negativos | El motor diferencia saldo deudor, credito a favor y saldo cero |
+
+Correcciones que la especificacion obligo a hacer sobre lo que se habia supuesto:
+
+- **R06 no cubre el dia del vencimiento.** La ventana preventiva es
+  estrictamente `dias < 0`; el dia del vencimiento es A02 con prioridad Alta.
+  §7 los separa y §14 lo confirma con T01 y T02. Antes se habia incluido
+  `dias = 0` en la ventana, que era una suposicion y era incorrecta.
+- **Faltaban las alertas de bucket.** A02–A08 no existian: el motor clasificaba
+  en buckets pero no emitia alerta por antiguedad, y §13 lo exige de forma
+  literal ("una factura con 1-30 dias recibe A03").
+- **R01 no emite alerta.** Su efecto es elevar la prioridad al menos un nivel,
+  no generar una alerta propia. Por eso no tiene entrada en el catalogo §7.
+- **Faltaba el nivel "Muy alta"** entre Alta y Critica.
+- **Los colores y prioridades de los buckets** eran invencion propia. Ahora son
+  los de §5.2.
 
 ## B. Decisiones de negocio (§9 del documento)
 
@@ -25,9 +40,11 @@ no dependen de infraestructura, asi que son las primeras:
    efectivamente un credito del cliente sin aplicar: el archivo de prueba no lo
    ejerce (es 0 en las 120 filas), asi que la logica no se ha corrido nunca
    contra un caso real.
-2. **Umbrales reales** de R01, R02, `n_facturas_vencidas`, `dias_preventivos` y
-   `pct_mayor_90_umbral`. Mientras no los fije la empresa, esas reglas quedan
-   inactivas por diseno (C-05).
+2. **Umbrales reales** de `umbral_saldo_alto` (R01), `umbral_saldo_critico`
+   (R02), `n_facturas_vencidas`, `dias_preventivos` y `pct_mayor_90_umbral`.
+   Mientras no los fije la empresa, esas reglas quedan inactivas por diseno
+   (C-05). §16 lo refuerza: no usar la base de demostracion para fijar
+   umbrales monetarios reales.
 3. **C-12 — regla de asignacion del responsable**: por vendedor, por zona o
    manual. Ambos campos ya viajan en la alerta, asi que es configuracion, no
    cambio de modelo.
@@ -50,14 +67,24 @@ Ninguna estaba en el documento; aparecieron al escribir el codigo.
    diferencia sea deliberada y no accidental.
 5. **¿Que pasa con una factura de saldo cero o negativo?** El motor la procesa
    sin excepcion. Si el ERP puede entregarlas, hay que decidir si se excluyen.
-6. **¿"Vence hoy" debe seguir contando como vencida en la exportacion?**
+6. **¿R02 es de factura o de cliente?** Se implemento de factura: §5.4 usa la
+   misma palabra "saldo" para R01 y R02, y R01 es inequivocamente de factura
+   por su condicion de dias. T11 lo respalda, aunque con una sola factura no
+   distingue entre las dos lecturas. Si "exposicion alta" se refiere a la
+   exposicion total del cliente, hay que moverla a ambito cliente.
+7. **§5.1 dice usar el campo DIAS_VENCIMIENTO del ERP** y calcular solo si no
+   tiene dato. El motor siempre calcula, porque §13 exige que cambiar la fecha
+   de corte recalcule la clasificacion, y un campo precalculado solo vale para
+   su propio corte. La reconciliacion demuestra que ambos coinciden en las 120
+   filas. Falta decidir si se guarda `origen_dias` para dejarlo explicito.
+8. **¿"Vence hoy" debe seguir contando como vencida en la exportacion?**
    Medido sobre el archivo: el ERP suma los saldos de dias=0 dentro de su
    columna "vencido menor o igual a 30". Son 84.500.000 de 506.400.000, el
    16,7% de la cartera, hoy reportado como vencido sin estarlo. El motor los
    separa en B01 (C-14) y `COLUMNAS_ERP` guarda la equivalencia para poder
    reproducir las columnas del ERP en la exportacion de §9. Falta decidir cual
    de las dos lecturas se presenta como oficial en el panel.
-7. **Sobre la aplicacion de creditos**, tres decisiones que la regla no cubria
+9. **Sobre la aplicacion de creditos**, tres decisiones que la regla no cubria
    y que se tomaron de forma explicita:
    - **Cascada.** Si el credito supera la factura mas antigua, el remanente
      pasa a la siguiente. Descartarlo perderia dinero del cliente.
@@ -70,7 +97,7 @@ Ninguna estaba en el documento; aparecieron al escribir el codigo.
    - Si el credito cubre toda la cartera del cliente, el sobrante se reporta en
      `creditos_a_favor`, porque ese cliente ya no aparece en la lista de
      trabajo y su saldo a favor se perderia.
-8. **Contrato del API del ERP.** `FuenteAPI` asume una respuesta con la lista
+10. **Contrato del API del ERP.** `FuenteAPI` asume una respuesta con la lista
    en `datos` y la pagina siguiente en `siguiente`. Ambos son parametrizables,
    pero hay que confirmarlos contra el API real, junto con el metodo de
    autenticacion (hoy Bearer) y si acepta la fecha de corte como parametro.

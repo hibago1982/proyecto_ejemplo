@@ -32,7 +32,7 @@ class TestR03FacturasVencidas:
     def test_exactamente_n_dispara(self, config_completa):
         """El caso que distinguia las dos redacciones: N=3 y 3 facturas."""
         resultado = evaluar(config_completa, self._cliente_con(3))
-        assert [a.codigo for a in resultado.alertas] == ["A10"]
+        assert any(a.codigo == "A10" for a in resultado.alertas)
 
     def test_menos_de_n_no_dispara(self, config_completa):
         resultado = evaluar(config_completa, self._cliente_con(2))
@@ -68,6 +68,15 @@ class TestR06Preventiva:
     def test_fuera_de_la_ventana_no_dispara(self, config_completa):
         resultado = evaluar(config_completa, [factura(dias_vencida=-6)])
         assert resultado.alertas == []
+
+    def test_el_dia_del_vencimiento_es_a02_y_no_a01(self, config_completa):
+        """§7 separa A01 de A02, y §14 lo confirma con T01 y T02.
+
+        Antes de tener la especificacion la ventana incluia dias=0; era una
+        suposicion, y era incorrecta.
+        """
+        resultado = evaluar(config_completa, [factura(dias_vencida=0)])
+        assert [a.codigo for a in resultado.alertas] == ["A02"]
 
     def test_una_factura_vencida_no_es_preventiva(self, config_completa):
         resultado = evaluar(config_completa, [factura(dias_vencida=1)])
@@ -114,12 +123,25 @@ class TestReglasInactivas:
         resultado = evaluar(config_completa, [factura(dias_vencida=10)])
         assert "A12" in resultado.reglas_inactivas
 
-    def test_r01_r02_r04_r05_quedan_declaradas_pero_sin_logica(self, config_completa):
-        """Se declaran para que aparezcan como pendientes, no para que se olviden."""
-        resultado = evaluar(config_completa, [factura(dias_vencida=10)])
-        for codigo in ("R01", "R02", "R04", "R05"):
+    def test_las_reglas_de_54_ya_tienen_condicion(self, config_completa):
+        """Ninguna regla de §5.4 queda sin evaluador."""
+        from busint_alertas.motores.cartera.reglas import REGLAS
+
+        for regla in REGLAS:
+            if regla.codigo == "A12":
+                continue  # fase 5, depende del historial de gestion
+            assert regla.evaluar is not None, regla.codigo
+
+    def test_r01_y_r02_sin_umbral_quedan_inactivas(self, config_completa):
+        """C-05: los umbrales monetarios los fija la empresa, no el programador.
+
+        §16 lo dice ademas de forma expresa: no usar la base de demostracion
+        para definir umbrales monetarios reales.
+        """
+        resultado = evaluar(config_completa, [factura(dias_vencida=45)])
+        for codigo in ("R01", "R02"):
             assert codigo in resultado.reglas_inactivas
-            assert "sin definir" in resultado.reglas_inactivas[codigo].lower()
+            assert "no ha asignado valor" in resultado.reglas_inactivas[codigo]
 
     def test_una_regla_activa_no_aparece_como_inactiva(self, config_completa):
         resultado = evaluar(config_completa, [factura(dias_vencida=10)])

@@ -35,6 +35,14 @@ class Bucket:
     prioridad_base: Prioridad
     accion: str
     orden: int
+    alerta: str | None = None
+    """Alerta del catalogo §7 que emite este bucket, si emite alguna.
+
+    §13 lo exige de forma literal: "una factura con 1-30 dias recibe A03".
+    B00 no emite: una factura por vencer solo genera alerta si cae dentro de la
+    ventana preventiva de R06, y entonces la alerta es A01.
+    """
+
     activo: bool = True
 
     def contiene(self, dias: int) -> bool:

@@ -7,9 +7,11 @@ reproducibles los cortes historicos (C-16) y deterministas las pruebas.
 
 El orden de evaluacion importa y es este:
 
-  1. Aplicar los creditos del cliente a sus facturas mas antiguas (C-10).
-  2. Clasificar cada factura en su bucket y acumular el perfil del cliente.
-  3. Evaluar las reglas de ambito factura sobre cada factura.
+  1. Aplicar los creditos del cliente a sus facturas mas antiguas (C-10) y
+     apartar los saldos que no son deudores (§5.3).
+  2. Clasificar cada factura deudora en su bucket y acumular el perfil.
+  3. Evaluar las reglas de ambito factura, resolver la elevacion de prioridad
+     de R01 y emitir la alerta del bucket mas las de las reglas disparadas.
   4. Evaluar las reglas de ambito cliente sobre el perfil ya completo.
   5. Consolidar la prioridad de cada cliente.
 
@@ -23,7 +25,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from ...core.alerta import Alerta, Marcador
+from ...core.alerta import Alerta, Explicacion, Marcador
 from ...core.motor import ContextoEjecucion, ResultadoMotor
 from ...core.tipos import Prioridad
 from .configuracion import ConfiguracionCartera
@@ -62,15 +64,18 @@ class MotorCartera:
 
         # --- Paso 1: creditos, antes de cualquier calculo sobre el saldo ---
         movimientos, aplicaciones = aplicar_creditos(movimientos)
-        saldadas = [m for m in movimientos if m.saldo <= 0 and m.credito_aplicado > 0]
-        movimientos = [m for m in movimientos if m.saldo > 0]
+
+        # §5.3 y §10.1: un saldo que no es deudor no se clasifica en el aging.
+        # Un saldo negativo es credito a favor, no mora (T09).
+        deudores = [m for m in movimientos if m.saldo > 0]
+        no_deudores = [m for m in movimientos if m.saldo <= 0]
 
         perfiles: dict[str, PerfilCliente] = {}
         globales = IndicadoresGlobales()
 
         # --- Pasos 2 y 3: clasificacion y reglas de factura ---
         reglas_factura = [r for r in activas if r.ambito == Ambito.FACTURA]
-        for mov in movimientos:
+        for mov in deudores:
             dias = mov.dias_vencimiento(contexto.corte)
             bucket = config.buckets.asignar(dias)
 
@@ -82,38 +87,74 @@ class MotorCartera:
             perfil.acumular(mov.saldo, dias, bucket)
             globales.acumular(mov.saldo, dias, bucket)
 
-            prioridad_factura = bucket.prioridad_base
             ctx_factura = ContextoFactura(movimiento=mov, dias=dias, bucket=bucket)
+            disparadas = [
+                (regla, exp)
+                for regla in reglas_factura
+                if (exp := regla.evaluar(ctx_factura, config.parametros)) is not None
+            ]
 
-            for regla in reglas_factura:
-                explicacion = regla.evaluar(ctx_factura, config.parametros)
-                if explicacion is None:
+            # R01 no emite alerta: eleva la prioridad de la que la factura ya
+            # tiene por antiguedad. Se resuelve antes de emitir nada, para que
+            # la alerta del bucket salga ya con la prioridad final.
+            elevaciones = sum(r.eleva_prioridad for r, _ in disparadas)
+            prioridad = bucket.prioridad_base.elevar(elevaciones) if elevaciones else bucket.prioridad_base
+
+            datos_comunes = {
+                "bucket": bucket.codigo,
+                "dias": dias,
+                "saldo": mov.saldo,
+                "saldo_bruto": mov.saldo_bruto,
+                "credito_aplicado": mov.credito_aplicado,
+                "vendedor": mov.vendedor,
+                "zona": mov.zona,
+            }
+
+            if bucket.alerta is not None:
+                resultado.alertas.append(
+                    Alerta(
+                        codigo=bucket.alerta,
+                        etiqueta=ETIQUETAS_ALERTA.get(bucket.alerta, bucket.etiqueta),
+                        prioridad=prioridad,
+                        accion=bucket.accion,
+                        sujeto=mov.cliente_nit,
+                        entidad=mov.factura,
+                        explicacion=Explicacion(
+                            regla=bucket.codigo,
+                            motivo=f"la factura esta en el rango {bucket.etiqueta}",
+                            valor_observado=dias,
+                        ),
+                        datos={
+                            **datos_comunes,
+                            "prioridad_base": bucket.prioridad_base.etiqueta,
+                            # §7.4: la cadena completa de por que quedo en esta
+                            # prioridad, que es lo que hace defendible el semaforo.
+                            "elevada_por": [
+                                str(e) for r, e in disparadas if r.eleva_prioridad
+                            ],
+                        },
+                    )
+                )
+
+            for regla, explicacion in disparadas:
+                if regla.alerta is None:
                     continue
                 resultado.alertas.append(
                     Alerta(
-                        codigo=regla.alerta or regla.codigo,
-                        etiqueta=ETIQUETAS_ALERTA.get(
-                            regla.alerta or regla.codigo, regla.etiqueta
-                        ),
+                        codigo=regla.alerta,
+                        etiqueta=ETIQUETAS_ALERTA.get(regla.alerta, regla.etiqueta),
                         prioridad=regla.prioridad,
                         accion=regla.accion,
                         sujeto=mov.cliente_nit,
                         entidad=mov.factura,
                         explicacion=explicacion,
-                        datos={
-                            "bucket": bucket.codigo,
-                            "dias": dias,
-                            "saldo": mov.saldo,
-                            "saldo_bruto": mov.saldo_bruto,
-                            "credito_aplicado": mov.credito_aplicado,
-                            "vendedor": mov.vendedor,
-                            "zona": mov.zona,
-                        },
+                        datos=dict(datos_comunes),
                     )
                 )
-                prioridad_factura = max(prioridad_factura, regla.prioridad)
+                prioridad = max(prioridad, regla.prioridad)
 
-            perfil.prioridad = max(perfil.prioridad, prioridad_factura)
+            perfil.prioridad = max(perfil.prioridad, prioridad)
+
 
         # --- Paso 4: reglas de cliente, sobre el perfil ya completo ---
         reglas_cliente = [r for r in activas if r.ambito == Ambito.CLIENTE]
@@ -150,7 +191,15 @@ class MotorCartera:
             "creditos": aplicaciones,
             "creditos_a_favor": a_favor,
             "facturas_saldadas_por_credito": [
-                (m.cliente_nit, m.factura, m.saldo_bruto) for m in saldadas
+                (m.cliente_nit, m.factura, m.saldo_bruto)
+                for m in no_deudores
+                if m.credito_aplicado > 0
+            ],
+            # §5.3 exige diferenciar saldo deudor, credito a favor y saldo cero.
+            "saldos_no_deudores": [
+                (m.cliente_nit, m.factura, m.saldo,
+                 "credito_a_favor" if m.saldo < 0 else "saldo_cero")
+                for m in no_deudores
             ],
         }
         return resultado

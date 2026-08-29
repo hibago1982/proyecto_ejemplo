@@ -20,7 +20,8 @@ class Prioridad(Enum):
     INFORMATIVA = 0
     MEDIA = 1
     ALTA = 2
-    CRITICA = 3
+    MUY_ALTA = 3
+    CRITICA = 4
 
     @property
     def etiqueta(self) -> str:
@@ -28,11 +29,20 @@ class Prioridad(Enum):
             Prioridad.INFORMATIVA: "Informativa",
             Prioridad.MEDIA: "Media",
             Prioridad.ALTA: "Alta",
+            Prioridad.MUY_ALTA: "Muy alta",
             Prioridad.CRITICA: "Critica",
         }[self]
 
     def __lt__(self, otra: "Prioridad") -> bool:
         return self.value < otra.value
+
+    def elevar(self, niveles: int = 1) -> "Prioridad":
+        """Sube la prioridad sin pasarse de Critica.
+
+        R01 "eleva la prioridad al menos un nivel": no emite alerta propia,
+        agrava la que ya tiene la factura por su antiguedad.
+        """
+        return Prioridad(min(self.value + niveles, Prioridad.CRITICA.value))
 
 
 class EstadoAlerta(Enum):

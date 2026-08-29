@@ -3,8 +3,8 @@
 Aplicacion unica que aloja varios motores de alerta. El primero es el **motor de
 alertas de cartera**; los siguientes se suman registrandose en el nucleo comun.
 
-Base: *BUSINT — Motor de Alertas de Cartera, analisis tecnico y arquitectura de
-desarrollo, v2.0 (23/08/2026)*.
+Base: *Especificacion Funcional v1.0 (17/08/2026)* y *Analisis tecnico y
+arquitectura de desarrollo v2.0 (23/08/2026)*, que la corrige.
 
 ## Estado
 
@@ -14,8 +14,8 @@ depende de decisiones de infraestructura pendientes.
 
 | Etapa | Estado |
 |-------|--------|
-| 0. Contrato de datos | Parcial — mapeo del archivo plano cerrado; falta C-10 y el modelo SQL |
-| 1. Motor de reglas | **En curso** — 2 de 6 reglas con logica definida; reconciliado contra el archivo de prueba |
+| 0. Contrato de datos | Parcial — mapeo del archivo plano cerrado; falta validar C-10 y el modelo SQL |
+| 1. Motor de reglas | **Completo** — las 6 reglas de §5.4, el catalogo A01–A12, T01–T12 y la reconciliacion |
 | 2. Persistencia (PostgreSQL) | Pendiente |
 | 3. API (FastAPI) | Pendiente |
 | 4–8 | Pendiente |
@@ -66,9 +66,12 @@ from busint_alertas.motores.cartera import ConfiguracionCartera, MotorCartera, M
 
 config = ConfiguracionCartera.plantilla(
     "E01",
-    dias_preventivos=5,
+    dias_preventivos=15,
     n_facturas_vencidas=3,
     pct_mayor_90_umbral=Decimal("40"),
+    # Sin estos dos, R01 y R02 quedan inactivas (C-05 y §16).
+    umbral_saldo_alto=Decimal("5000000"),
+    umbral_saldo_critico=Decimal("20000000"),
 )
 
 contexto = ContextoEjecucion(empresa_id="E01", corte=date(2026, 8, 31), configuracion=config)

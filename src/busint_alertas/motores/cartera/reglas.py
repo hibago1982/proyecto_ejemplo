@@ -76,6 +76,13 @@ class DefinicionRegla:
     """Codigo de marcador de riesgo de cliente, para R04 y R05 (C-04)."""
 
     parametros_requeridos: tuple[str, ...] = ()
+    eleva_prioridad: int = 0
+    """Niveles que sube la prioridad de la factura cuando la regla se cumple.
+
+    R01 no emite alerta propia: su efecto es agravar la que la factura ya tiene
+    por antiguedad. Es la unica regla de §5.4 cuyo efecto es este.
+    """
+
     fase: Fase = Fase.F1_MOTOR
     evaluar: EvaluadorFactura | EvaluadorCliente | None = None
     """None significa que la condicion aun no esta definida en la especificacion."""
@@ -110,11 +117,48 @@ class DefinicionRegla:
 # --------------------------------------------------------------------------
 
 
+def _r01_saldo_alto_vencido(ctx: ContextoFactura, p: Parametros) -> Explicacion | None:
+    """R01 - saldo sobre umbral y mas de 30 dias vencida. Eleva la prioridad.
+
+    §5.4 es explicito en las dos condiciones: el umbral monetario por si solo no
+    basta, la factura ademas tiene que llevar mas de 30 dias vencida. No emite
+    alerta propia; agrava la que ya tiene por antiguedad.
+    """
+    umbral = p.decimal("umbral_saldo_alto")
+    if ctx.movimiento.saldo > umbral and ctx.dias > 30:
+        return Explicacion(
+            regla="R01",
+            motivo=f"saldo de {ctx.movimiento.saldo} con {ctx.dias} dias vencida",
+            parametro="umbral_saldo_alto",
+            valor_parametro=umbral,
+            valor_observado=ctx.movimiento.saldo,
+        )
+    return None
+
+
+def _r02_exposicion_alta(ctx: ContextoFactura, p: Parametros) -> Explicacion | None:
+    """R02 / A09 - el saldo supera el umbral critico.
+
+    §5.4 no repite la condicion de dias que si lleva R01, asi que aplica a
+    cualquier antiguedad, incluida una factura por vencer.
+    """
+    umbral = p.decimal("umbral_saldo_critico")
+    if ctx.movimiento.saldo > umbral:
+        return Explicacion(
+            regla="R02",
+            motivo=f"saldo de {ctx.movimiento.saldo} sobre el umbral critico",
+            parametro="umbral_saldo_critico",
+            valor_parametro=umbral,
+            valor_observado=ctx.movimiento.saldo,
+        )
+    return None
+
+
 def _r03_facturas_vencidas(ctx: ContextoCliente, p: Parametros) -> Explicacion | None:
     """R03 / A10 - el cliente acumula N o mas facturas vencidas.
 
-    C-02: §5.4 decia "mas de N" y §7 decia "N o mas". Con N=3 y un cliente de 3
-    facturas vencidas una regla disparaba y la otra no. Se adopta el operador
+    C-02: §5.4 dice "mas de N" y §7 A10 dice "N o mas". Con N=3 y un cliente de
+    3 facturas vencidas una regla disparaba y la otra no. Se adopta el operador
     mayor o igual, criterio de A10, porque A10 es quien genera el identificador.
     """
     umbral = p.entero("n_facturas_vencidas")
@@ -129,23 +173,47 @@ def _r03_facturas_vencidas(ctx: ContextoCliente, p: Parametros) -> Explicacion |
     return None
 
 
+def _r04_envejecimiento(ctx: ContextoCliente, p: Parametros) -> Explicacion | None:
+    """R04 - alguna factura del cliente pasa de 90 dias.
+
+    El corte de 90 esta escrito en §5.4 y no es parametrizable, igual que los
+    indicadores de §6 que usan el mismo umbral.
+    """
+    if ctx.dias_max > 90:
+        return Explicacion(
+            regla="R04",
+            motivo=f"su factura mas antigua lleva {ctx.dias_max} dias vencida",
+            valor_observado=ctx.dias_max,
+        )
+    return None
+
+
+def _r05_riesgo_critico(ctx: ContextoCliente, p: Parametros) -> Explicacion | None:
+    """R05 - alguna factura del cliente pasa de 150 dias."""
+    if ctx.dias_max > 150:
+        return Explicacion(
+            regla="R05",
+            motivo=f"su factura mas antigua lleva {ctx.dias_max} dias vencida",
+            valor_observado=ctx.dias_max,
+        )
+    return None
+
+
 def _r06_preventiva(ctx: ContextoFactura, p: Parametros) -> Explicacion | None:
     """R06 / A01 - la factura vence dentro de la ventana preventiva.
+
+    Estrictamente por vencer: el dia del vencimiento lo cubre A02 con prioridad
+    Alta, no A01. §7 los separa y §14 lo confirma con T01 y T02.
 
     C-06: el parametro se llama `dias_preventivos` y no "X", para no confundirlo
     con el `dias_sin_gestion` de A12, que la especificacion tambien llamaba "X".
     """
     dias_preventivos = p.entero("dias_preventivos")
-    if -dias_preventivos <= ctx.dias <= 0:
+    if -dias_preventivos <= ctx.dias < 0:
         faltan = -ctx.dias
-        motivo = (
-            "la factura vence hoy"
-            if faltan == 0
-            else f"la factura vence en {faltan} dias"
-        )
         return Explicacion(
             regla="R06",
-            motivo=motivo,
+            motivo=f"la factura vence en {faltan} dias",
             parametro="dias_preventivos",
             valor_parametro=dias_preventivos,
             valor_observado=faltan,
@@ -178,96 +246,91 @@ def _a11_concentracion_mayor_90(
 # Catalogo
 # --------------------------------------------------------------------------
 
-#: Reglas del motor de cartera.
-#:
-#: R01, R02, R04 y R05 se declaran con su forma conocida pero sin evaluador: la
-#: Especificacion Funcional v1.0 §5.4 no llego a este documento y su condicion
-#: exacta no puede inventarla el programador. Al no tener evaluador quedan
-#: inactivas y aparecen como pendientes en la configuracion.
+#: Reglas de §5.4 con sus efectos, y las dos alertas de §7 que no tienen
+#: codigo de regla propio.
 REGLAS: tuple[DefinicionRegla, ...] = (
     DefinicionRegla(
         codigo="R01",
-        etiqueta="Saldo vencido sobre umbral monetario",
+        etiqueta="Saldo alto en mora",
         ambito=Ambito.FACTURA,
-        prioridad=Prioridad.ALTA,
-        accion="Contactar al cliente",
+        prioridad=Prioridad.INFORMATIVA,
+        accion="Priorizar en la gestion del dia",
         alerta=None,
-        parametros_requeridos=("umbral_monetario_r01",),
-        evaluar=None,
-        nota="Falta §5.4: sobre que monto compara y que alerta emite.",
+        parametros_requeridos=("umbral_saldo_alto",),
+        eleva_prioridad=1,
+        evaluar=_r01_saldo_alto_vencido,
+        nota="Su efecto es elevar la prioridad, no emitir alerta (§5.4).",
     ),
     DefinicionRegla(
         codigo="R02",
-        etiqueta="Exposicion del cliente sobre umbral monetario",
-        ambito=Ambito.CLIENTE,
+        etiqueta="Alta exposicion",
+        ambito=Ambito.FACTURA,
         prioridad=Prioridad.ALTA,
-        accion="Escalar a coordinador",
-        alerta=None,
-        parametros_requeridos=("umbral_monetario_r02",),
-        evaluar=None,
-        nota="Falta §5.4: la especificacion le asigna un identificador de alerta "
-        "que este documento no transcribe.",
+        accion="Revisar exposicion",
+        alerta="A09",
+        parametros_requeridos=("umbral_saldo_critico",),
+        evaluar=_r02_exposicion_alta,
     ),
     DefinicionRegla(
         codigo="R03",
-        etiqueta="Acumulacion de facturas vencidas",
+        etiqueta="Cliente reincidente",
         ambito=Ambito.CLIENTE,
         prioridad=Prioridad.ALTA,
-        accion="Escalar a coordinador",
+        accion="Revisar comportamiento",
         alerta="A10",
         parametros_requeridos=("n_facturas_vencidas",),
         evaluar=_r03_facturas_vencidas,
     ),
     DefinicionRegla(
         codigo="R04",
-        etiqueta="Marcador de riesgo por comportamiento de pago",
+        etiqueta="Riesgo de envejecimiento",
         ambito=Ambito.CLIENTE,
-        prioridad=Prioridad.MEDIA,
+        prioridad=Prioridad.MUY_ALTA,
         accion="Revisar condiciones de credito",
         alerta=None,
         marcador="M04",
-        evaluar=None,
-        nota="C-04: se modela como marcador de cliente, no como alerta de factura. "
-        "Falta §5.4 para su condicion.",
+        evaluar=_r04_envejecimiento,
+        nota="C-04: marcador de cliente, no alerta de factura.",
     ),
     DefinicionRegla(
         codigo="R05",
-        etiqueta="Marcador de riesgo por concentracion de cartera",
+        etiqueta="Riesgo critico",
         ambito=Ambito.CLIENTE,
-        prioridad=Prioridad.MEDIA,
-        accion="Revisar condiciones de credito",
+        prioridad=Prioridad.CRITICA,
+        accion="Evaluar recuperacion",
         alerta=None,
         marcador="M05",
-        evaluar=None,
-        nota="C-04: se modela como marcador de cliente. Falta §5.4 para su condicion.",
+        evaluar=_r05_riesgo_critico,
+        nota="C-04: marcador de cliente, no alerta de factura.",
     ),
     DefinicionRegla(
         codigo="R06",
-        etiqueta="Aviso preventivo de vencimiento",
+        etiqueta="Proximo vencimiento",
         ambito=Ambito.FACTURA,
         prioridad=Prioridad.MEDIA,
-        accion="Recordar al cliente antes del vencimiento",
+        accion="Registrar seguimiento",
         alerta="A01",
         parametros_requeridos=("dias_preventivos",),
         evaluar=_r06_preventiva,
+        nota="C-03: prioridad Media, no Informativa.",
     ),
     DefinicionRegla(
         codigo="A11",
-        etiqueta="Concentracion de cartera a mas de 90 dias",
+        etiqueta="Envejecimiento critico",
         ambito=Ambito.CLIENTE,
-        prioridad=Prioridad.CRITICA,
-        accion="Escalar a coordinador",
+        prioridad=Prioridad.MUY_ALTA,
+        accion="Intervencion",
         alerta="A11",
         parametros_requeridos=("pct_mayor_90_umbral",),
         evaluar=_a11_concentracion_mayor_90,
-        nota="La especificacion no le asigna codigo de regla; se usa el de la alerta.",
+        nota="§7 no le asigna codigo de regla; se usa el de la alerta.",
     ),
     DefinicionRegla(
         codigo="A12",
-        etiqueta="Factura sin gestion registrada",
+        etiqueta="Sin gestion",
         ambito=Ambito.FACTURA,
         prioridad=Prioridad.ALTA,
-        accion="Registrar gestion de cobro",
+        accion="Escalar al responsable",
         alerta="A12",
         parametros_requeridos=("dias_sin_gestion",),
         fase=Fase.F5_GESTION,
@@ -277,18 +340,27 @@ REGLAS: tuple[DefinicionRegla, ...] = (
     ),
 )
 
-#: Etiquetas del catalogo de alertas, para presentacion.
+#: Catalogo de alertas de §7. A02-A08 las emiten los buckets de §5.2.
 ETIQUETAS_ALERTA: dict[str, str] = {
-    "A01": "Proximo a vencer",
-    "A10": "Multiples facturas vencidas",
-    "A11": "Concentracion en mora mayor a 90 dias",
-    "A12": "Sin gestion registrada",
+    "A01": "Proximo vencimiento",
+    "A02": "Vence hoy",
+    "A03": "Mora 1-30",
+    "A04": "Mora 31-60",
+    "A05": "Mora 61-90",
+    "A06": "Mora 91-120",
+    "A07": "Mora 121-150",
+    "A08": "Mora mayor a 150",
+    "A09": "Alta exposicion",
+    "A10": "Cliente reincidente",
+    "A11": "Envejecimiento critico",
+    "A12": "Sin gestion",
 }
 
 ETIQUETAS_MARCADOR: dict[str, str] = {
-    "M04": "Riesgo por comportamiento de pago",
-    "M05": "Riesgo por concentracion de cartera",
+    "M04": "Riesgo de envejecimiento",
+    "M05": "Riesgo critico",
 }
+
 
 
 def reglas_de_ambito(ambito: str) -> Iterator[DefinicionRegla]:
