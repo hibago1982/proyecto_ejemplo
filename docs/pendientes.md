@@ -19,10 +19,11 @@ Las ocho decisiones del documento siguen abiertas. Estas tres afectan el motor y
 no dependen de infraestructura, asi que son las primeras:
 
 1. **C-10 — ¿el saldo abierto del ERP ya viene neto de notas credito y abonos?**
-   El documento la marca como la mas urgente. Hoy el motor usa `saldo` tal como
-   llega y transporta `valor_credito` sin restarlo. Si la respuesta es que no
-   viene neto, cambia la definicion de saldo deudor y con ella todos los
-   indicadores.
+   Sigue abierta. El archivo de prueba **no la responde**: `Valor Credito` es 0
+   en las 120 filas y `Valor Total` es igual a `Valor Original` en todas, asi
+   que el caso nunca se ejerce. Hay que validarlo contra el modelo real de
+   Busint. Hoy el motor usa `Valor Total` como saldo y transporta
+   `valor_credito` sin restarlo.
 2. **Umbrales reales** de R01, R02, `n_facturas_vencidas`, `dias_preventivos` y
    `pct_mayor_90_umbral`. Mientras no los fije la empresa, esas reglas quedan
    inactivas por diseno (C-05).
@@ -48,8 +49,28 @@ Ninguna estaba en el documento; aparecieron al escribir el codigo.
    diferencia sea deliberada y no accidental.
 5. **¿Que pasa con una factura de saldo cero o negativo?** El motor la procesa
    sin excepcion. Si el ERP puede entregarlas, hay que decidir si se excluyen.
+6. **¿"Vence hoy" debe seguir contando como vencida en la exportacion?**
+   Medido sobre el archivo: el ERP suma los saldos de dias=0 dentro de su
+   columna "vencido menor o igual a 30". Son 84.500.000 de 506.400.000, el
+   16,7% de la cartera, hoy reportado como vencido sin estarlo. El motor los
+   separa en B01 (C-14) y `COLUMNAS_ERP` guarda la equivalencia para poder
+   reproducir las columnas del ERP en la exportacion de §9. Falta decidir cual
+   de las dos lecturas se presenta como oficial en el panel.
+7. **Contrato del API del ERP.** `FuenteAPI` asume una respuesta con la lista
+   en `datos` y la pagina siguiente en `siguiente`. Ambos son parametrizables,
+   pero hay que confirmarlos contra el API real, junto con el metodo de
+   autenticacion (hoy Bearer) y si acepta la fecha de corte como parametro.
 
-## D. Nota tecnica
+## D. Origenes de datos
+
+Implementados: Excel, CSV y API REST, todos detras del mismo contrato
+`FuenteDatos`. Falta:
+
+- **Lectura SQL directa** sobre el MySQL de Busint (escenario A de §4.3). Es
+  fase 2 porque necesita SQLAlchemy y el esquema real de las tablas.
+- El `MapeoCampos` de la lectura SQL, que sera distinto al del archivo plano.
+
+## E. Nota tecnica
 
 El documento fija Python 3.12. El proyecto declara `>=3.11` porque es lo
 disponible en el entorno actual; el codigo no usa nada exclusivo de 3.12.

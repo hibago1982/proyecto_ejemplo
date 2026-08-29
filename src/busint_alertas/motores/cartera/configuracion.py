@@ -4,11 +4,15 @@ Es el equivalente en memoria de `ar_aging_param` + `ar_alert_rule`. En la fase 2
 se cargara desde PostgreSQL; en la fase 1 se construye en codigo para poder
 probar el motor sin base de datos.
 
-Advertencia sobre los rangos por defecto: la plantilla de abajo es una propuesta
-coherente con los indicadores de §6 (que hablan de cortes en 90 y 150 dias),
-pero los rangos reales estan en §5.2 de la Especificacion Funcional v1.0, que
-no llego con este documento. Deben confirmarse antes de usar en produccion.
-Cambiarlos es editar esta plantilla, no el motor.
+Los rangos de `BUCKETS_BUSINT` se derivaron de las columnas de aging del archivo
+de prueba, que son las que el ERP ya calcula:
+
+    Valor por Vencer | <=30 | <=60 | <=90 | <=120 | <=150 | mas de 150
+
+Una diferencia deliberada con el ERP: el archivo mete los saldos de dias=0 en la
+columna "vencido menor o igual a 30". Este motor los separa en B01 "vence hoy",
+que es lo que exige C-14 para que los indicadores sumen el total. La equivalencia
+para reproducir las columnas del ERP en la exportacion de §9 es B01 + B02 = "<=30".
 """
 
 from __future__ import annotations
@@ -19,8 +23,8 @@ from ...core.parametros import Parametros
 from ...core.tipos import Prioridad
 from .buckets import Bucket, ConfiguracionBuckets
 
-#: Plantilla de buckets. PENDIENTE de confirmar contra §5.2.
-BUCKETS_PLANTILLA: tuple[Bucket, ...] = (
+#: Buckets de BUSINT, segun las columnas de aging del archivo de prueba (§5.2).
+BUCKETS_BUSINT: tuple[Bucket, ...] = (
     Bucket("B00", "Por vencer", None, -1, "#64748B", Prioridad.INFORMATIVA,
            "Sin accion", orden=0),
     Bucket("B01", "Vence hoy", 0, 0, "#0EA5E9", Prioridad.MEDIA,
@@ -31,12 +35,25 @@ BUCKETS_PLANTILLA: tuple[Bucket, ...] = (
            "Contactar al cliente", orden=3),
     Bucket("B04", "61 a 90 dias", 61, 90, "#F97316", Prioridad.ALTA,
            "Escalar a coordinador", orden=4),
-    Bucket("B05", "91 a 150 dias", 91, 150, "#EF4444", Prioridad.CRITICA,
+    Bucket("B05", "91 a 120 dias", 91, 120, "#EF4444", Prioridad.CRITICA,
            "Escalar a coordinador", orden=5),
-    Bucket("B06", "Mas de 150 dias", 151, None, "#991B1B", Prioridad.CRITICA,
-           "Evaluar cobro juridico", orden=6),
+    Bucket("B06", "121 a 150 dias", 121, 150, "#DC2626", Prioridad.CRITICA,
+           "Escalar a coordinador", orden=6),
+    Bucket("B07", "Mas de 150 dias", 151, None, "#991B1B", Prioridad.CRITICA,
+           "Evaluar cobro juridico", orden=7),
 )
 
+#: Equivalencia con las columnas de aging del ERP, para la exportacion de §9.
+#: El ERP no separa "vence hoy": lo suma dentro de su columna de menor o igual a 30.
+COLUMNAS_ERP: dict[str, tuple[str, ...]] = {
+    "Valor por Vencer": ("B00",),
+    "Valor vencido menor o igual a 30 dias": ("B01", "B02"),
+    "Valor vencido menor o igual a 60 dias": ("B03",),
+    "Valor vencido menor o igual a 90 dias": ("B04",),
+    "Valor vencido menor o igual a 120 dias": ("B05",),
+    "Valor vencido menor o igual a 150 dias": ("B06",),
+    "Valor vencido a mas de 150": ("B07",),
+}
 
 @dataclass
 class ConfiguracionCartera:
@@ -44,7 +61,7 @@ class ConfiguracionCartera:
 
     empresa_id: str
     buckets: ConfiguracionBuckets = field(
-        default_factory=lambda: ConfiguracionBuckets(BUCKETS_PLANTILLA)
+        default_factory=lambda: ConfiguracionBuckets(BUCKETS_BUSINT)
     )
     parametros: Parametros = field(default_factory=Parametros)
     """Parametros de todas las reglas, en un solo mapa.

@@ -9,7 +9,7 @@ import pytest
 
 from busint_alertas.motores.cartera import Movimiento
 from busint_alertas.motores.cartera.buckets import Bucket, ConfiguracionBuckets
-from busint_alertas.motores.cartera.configuracion import BUCKETS_PLANTILLA
+from busint_alertas.motores.cartera.configuracion import BUCKETS_BUSINT
 from busint_alertas.core.tipos import Prioridad
 
 from ..conftest import CORTE, factura
@@ -62,18 +62,20 @@ class TestAsignacionDeBuckets:
             (31, "B03"),
             (90, "B04"),
             (91, "B05"),
-            (150, "B05"),
-            (151, "B06"),
-            (900, "B06"),
+            (120, "B05"),
+            (121, "B06"),
+            (150, "B06"),
+            (151, "B07"),
+            (900, "B07"),
         ],
     )
     def test_los_limites_caen_donde_deben(self, dias, esperado):
-        buckets = ConfiguracionBuckets(BUCKETS_PLANTILLA)
+        buckets = ConfiguracionBuckets(BUCKETS_BUSINT)
         assert buckets.asignar(dias).codigo == esperado
 
     def test_vence_hoy_no_es_ni_por_vencer_ni_vencida(self):
         """C-14: el bucket B01 es una categoria propia, no un caso de las otras."""
-        b01 = ConfiguracionBuckets(BUCKETS_PLANTILLA).obtener("B01")
+        b01 = ConfiguracionBuckets(BUCKETS_BUSINT).obtener("B01")
         assert b01.es_vence_hoy
         assert not b01.es_por_vencer
         assert not b01.es_vencida
