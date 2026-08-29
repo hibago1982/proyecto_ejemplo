@@ -16,7 +16,13 @@ const PESTANAS: { vista: Vista; etiqueta: string }[] = [
   { vista: { nombre: "gestion" }, etiqueta: "Lista de gestión" },
 ];
 
-export function App({ cliente }: { cliente: Cliente }) {
+export function App({
+  cliente,
+  usuarioId,
+}: {
+  cliente: Cliente;
+  usuarioId: string;
+}) {
   const vista = useVista();
 
   return (
@@ -47,7 +53,7 @@ export function App({ cliente }: { cliente: Cliente }) {
       </nav>
 
       {vista.nombre === "cliente" ? (
-        <DetalleCliente cliente={cliente} nit={vista.nit} />
+        <DetalleCliente cliente={cliente} nit={vista.nit} usuarioId={usuarioId} />
       ) : vista.nombre === "gestion" ? (
         <ListaGestion cliente={cliente} />
       ) : (

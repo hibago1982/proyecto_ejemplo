@@ -302,3 +302,67 @@ class TestNombreDelCliente:
         clientes, no como alertas."""
         cliente_corrido.get("/api/v1/gestion", headers=CABECERA)
         assert contar_consultas("ar_riesgo_cliente") == 1
+
+
+class TestGestionPorApi:
+    """§11: el flujo de cobranza de principio a fin, por el API."""
+
+    def _registrar(self, cliente, **cambios):
+        cuerpo = {
+            "factura": "F-4", "tipo": "llamada", "usuario_id": "hbarrera",
+            "resultado": "Contactado",
+        }
+        cuerpo.update(cambios)
+        return cliente.post(
+            "/api/v1/clientes/900/gestiones", json=cuerpo, headers=CABECERA
+        )
+
+    def test_registrar_devuelve_201(self, cliente_corrido):
+        r = self._registrar(cliente_corrido)
+        assert r.status_code == 201
+        assert r.json()["usuario_id"] == "hbarrera"
+
+    def test_la_alerta_queda_gestionada(self, cliente_corrido):
+        self._registrar(cliente_corrido)
+        d = cliente_corrido.get("/api/v1/clientes/900", headers=CABECERA).json()
+        de_f4 = [a for a in d["alertas"] if a["factura"] == "F-4"]
+        assert de_f4 and all(a["estado"] == "gestionada" for a in de_f4)
+
+    def test_el_detalle_trae_el_historial(self, cliente_corrido):
+        self._registrar(cliente_corrido, resultado="Primera")
+        self._registrar(cliente_corrido, resultado="Segunda")
+        d = cliente_corrido.get("/api/v1/clientes/900", headers=CABECERA).json()
+        assert len(d["gestiones"]) == 2
+
+    def test_se_guarda_el_compromiso_de_pago(self, cliente_corrido):
+        r = self._registrar(
+            cliente_corrido, tipo="acuerdo",
+            compromiso_fecha="2026-09-15", compromiso_valor="500000",
+        )
+        assert r.status_code == 201
+        assert r.json()["compromiso_valor"] == "500000.00"
+
+    def test_un_compromiso_a_medias_se_rechaza(self, cliente_corrido):
+        r = self._registrar(cliente_corrido, compromiso_fecha="2026-09-15")
+        assert r.status_code == 422
+        assert "Falta el valor" in r.json()["detail"]
+
+    def test_un_tipo_invalido_dice_cuales_valen(self, cliente_corrido):
+        r = self._registrar(cliente_corrido, tipo="telepatia")
+        assert r.status_code == 422
+        assert "llamada" in r.json()["detail"]
+
+    def test_una_factura_sin_alerta_se_rechaza(self, cliente_corrido):
+        r = self._registrar(cliente_corrido, factura="F-999")
+        assert r.status_code == 422
+        assert "No hay alertas de la factura" in r.json()["detail"]
+
+    def test_gestionar_no_altera_el_saldo(self, cliente_corrido):
+        """§16: el estado de la gestión no toca el estado de la factura."""
+        antes = cliente_corrido.get("/api/v1/clientes/900", headers=CABECERA).json()
+        saldo = next(a["saldo"] for a in antes["alertas"] if a["factura"] == "F-4")
+
+        self._registrar(cliente_corrido)
+
+        despues = cliente_corrido.get("/api/v1/clientes/900", headers=CABECERA).json()
+        assert next(a["saldo"] for a in despues["alertas"] if a["factura"] == "F-4") == saldo

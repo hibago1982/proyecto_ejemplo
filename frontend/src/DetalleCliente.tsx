@@ -8,10 +8,11 @@
  */
 import { useQuery } from "@tanstack/react-query";
 
-import type { Cliente, DetalleCliente as Detalle } from "./api/cliente";
+import type { Cliente, DetalleCliente as Detalle, Gestion } from "./api/cliente";
 import { Chip } from "./componentes/Chip";
 import { Cargando, Fallo } from "./componentes/Estados";
 import { Explicacion } from "./componentes/Explicacion";
+import { RegistrarGestion } from "./componentes/RegistrarGestion";
 import { Superficie } from "./componentes/Superficie";
 import { dias, fecha, pesos, porcentaje } from "./formato";
 import { irA } from "./navegacion";
@@ -21,12 +22,32 @@ const MARCADORES: Record<string, string> = {
   M05: "Riesgo crítico (alguna factura pasa de 150 días)",
 };
 
+/** Estados de §12, con el nombre que ve el usuario y no el valor de la base. */
+const ESTADOS: Record<string, string> = {
+  activa: "Activa",
+  gestionada: "Gestionada",
+  cerrada_por_pago: "Cerrada por pago",
+  cerrada_manual: "Cerrada",
+};
+
+const TIPOS: Record<string, string> = {
+  llamada: "Llamada",
+  correo: "Correo",
+  mensaje: "Mensaje",
+  visita: "Visita",
+  acuerdo: "Acuerdo de pago",
+  disputa: "Disputa",
+  otra: "Otra",
+};
+
 export function DetalleCliente({
   cliente,
   nit,
+  usuarioId = "sin_identificar",
 }: {
   cliente: Cliente;
   nit: string;
+  usuarioId?: string;
 }) {
   const detalle = useQuery({
     queryKey: ["cliente", nit],
@@ -117,7 +138,9 @@ export function DetalleCliente({
                 <td className="py-2 pl-2">
                   <Chip nivel={a.prioridad} texto={a.prioridad_etiqueta} />
                 </td>
-                <td className="py-2 pl-2 text-apagado">{a.estado}</td>
+                <td className="py-2 pl-2 text-apagado">
+                  {ESTADOS[a.estado] ?? a.estado}
+                </td>
                 <td className="py-2 pl-2 text-apagado">{a.accion}</td>
               </tr>
             ))}
@@ -125,11 +148,14 @@ export function DetalleCliente({
         </table>
       </Superficie>
 
-      <Superficie titulo="Historial de gestiones">
-        <p className="py-4 text-center text-base text-tenue">
-          El registro de gestiones y compromisos de pago es de la fase 6.
-        </p>
-      </Superficie>
+      <RegistrarGestion
+        cliente={cliente}
+        nit={nit}
+        alertas={d.alertas}
+        usuarioId={usuarioId}
+      />
+
+      <Historial gestiones={d.gestiones ?? []} />
     </div>
   );
 }
@@ -165,5 +191,52 @@ function Indicadores({ detalle }: { detalle: Detalle }) {
         </Superficie>
       ))}
     </div>
+  );
+}
+
+/** Historial de cobranza (§8.3), de lo mas reciente a lo mas antiguo. */
+function Historial({ gestiones }: { gestiones: Gestion[] }) {
+  if (gestiones.length === 0) {
+    return (
+      <Superficie titulo="Historial de gestiones">
+        <p className="py-4 text-center text-base text-tenue">
+          Todavía no se ha registrado ninguna gestión con este cliente.
+        </p>
+      </Superficie>
+    );
+  }
+
+  return (
+    <Superficie titulo="Historial de gestiones">
+      <ol className="space-y-entre">
+        {gestiones.map((g) => (
+          <li key={g.id} className="border-b border-filete/60 pb-2 last:border-0 last:pb-0">
+            <div className="flex flex-wrap items-baseline gap-2">
+              <span className="font-medium text-tinta">
+                {TIPOS[g.tipo] ?? g.tipo}
+              </span>
+              {g.factura && (
+                <span className="text-menor tabular-nums text-apagado">
+                  factura {g.factura}
+                </span>
+              )}
+              <span className="text-menor tabular-nums text-tenue">
+                {new Date(g.fecha).toLocaleString("es-CO")} · {g.usuario_id}
+              </span>
+            </div>
+            {g.resultado && <p className="text-base text-apagado">{g.resultado}</p>}
+            {g.observacion && (
+              <p className="text-menor text-tenue">{g.observacion}</p>
+            )}
+            {g.compromiso_fecha && g.compromiso_valor && (
+              <p className="mt-0.5 text-menor font-medium text-[#2F6B9A]">
+                Compromiso: {pesos(g.compromiso_valor)} para{" "}
+                {fecha(g.compromiso_fecha)}
+              </p>
+            )}
+          </li>
+        ))}
+      </ol>
+    </Superficie>
   );
 }

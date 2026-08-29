@@ -18,6 +18,8 @@ export type DetalleCliente = components["schemas"]["DetalleCliente"];
 export type Configuracion = components["schemas"]["Configuracion"];
 export type ReglaConfigurada = components["schemas"]["ReglaConfigurada"];
 export type Corte = components["schemas"]["Corte"];
+export type Gestion = components["schemas"]["Gestion"];
+export type NuevaGestion = components["schemas"]["NuevaGestion"];
 
 export class ErrorApi extends Error {
   constructor(
@@ -75,6 +77,11 @@ export function crearCliente({ base = "/api/v1", empresaId }: OpcionesCliente) {
     cliente: (nit: string, corte?: string) =>
       pedir<DetalleCliente>(conCorte(`/clientes/${encodeURIComponent(nit)}`, corte)),
     configuracion: () => pedir<Configuracion>("/configuracion"),
+    registrarGestion: (nit: string, gestion: NuevaGestion) =>
+      pedir<Gestion>(`/clientes/${encodeURIComponent(nit)}/gestiones`, {
+        method: "POST",
+        body: JSON.stringify(gestion),
+      }),
   };
 }
 

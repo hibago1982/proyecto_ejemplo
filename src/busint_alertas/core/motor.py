@@ -35,6 +35,13 @@ class ContextoEjecucion:
     fase_vigente: Fase = Fase.F1_MOTOR
     """Reglas declaradas para una fase posterior no se evaluan (C-07)."""
 
+    historial: Any = None
+    """Historial de gestion ya resuelto, para A12.
+
+    Llega como dato y no se consulta: el motor no abre conexiones. Es lo que
+    mantiene la evaluacion pura y permite probar A12 sin base de datos.
+    """
+
 
 @dataclass
 class ResultadoMotor:

@@ -21,6 +21,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/clientes/{cliente_nit}/gestiones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Historial de gestiones del cliente */
+        get: operations["gestiones_api_v1_clientes__cliente_nit__gestiones_get"];
+        put?: never;
+        /**
+         * Registrar una gestion de cobranza
+         * @description §11: el gestor registra la gestion y la alerta pasa a gestionada.
+         *
+         *     No toca el saldo ni el bucket. §16 separa el estado de la gestion del de la
+         *     factura: una factura sigue vencida aunque ya se haya gestionado.
+         */
+        post: operations["registrar_gestion_api_v1_clientes__cliente_nit__gestiones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/configuracion": {
         parameters: {
             query?: never;
@@ -312,6 +336,8 @@ export interface components {
             corte: string;
             /** Dias Max */
             dias_max: number;
+            /** Gestiones */
+            gestiones?: components["schemas"]["Gestion"][];
             /** Marcadores */
             marcadores: string[];
             /** Mayor 150 */
@@ -425,6 +451,34 @@ export interface components {
             /** Zona */
             zona?: string | null;
         };
+        /** Gestion */
+        Gestion: {
+            /** Cliente Nit */
+            cliente_nit: string;
+            /** Compromiso Fecha */
+            compromiso_fecha: string | null;
+            /** Compromiso Valor */
+            compromiso_valor: string | null;
+            /** Corte */
+            corte: string | null;
+            /** Factura */
+            factura: string;
+            /**
+             * Fecha
+             * Format: date-time
+             */
+            fecha: string;
+            /** Id */
+            id: number;
+            /** Observacion */
+            observacion: string | null;
+            /** Resultado */
+            resultado: string | null;
+            /** Tipo */
+            tipo: string;
+            /** Usuario Id */
+            usuario_id: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -445,6 +499,36 @@ export interface components {
             por_pagina: number;
             /** Total */
             total: number;
+        };
+        /**
+         * NuevaGestion
+         * @description Lo que registra el gestor tras contactar al cliente.
+         *
+         *     El compromiso de pago es opcional, pero si va, van sus dos partes: media
+         *     promesa no se puede seguir.
+         */
+        NuevaGestion: {
+            /** Compromiso Fecha */
+            compromiso_fecha?: string | null;
+            /** Compromiso Valor */
+            compromiso_valor?: number | string | null;
+            /**
+             * Factura
+             * @description Vacio para una alerta de cliente.
+             * @default
+             */
+            factura: string;
+            /** Observacion */
+            observacion?: string | null;
+            /** Resultado */
+            resultado?: string | null;
+            /**
+             * Tipo
+             * @description llamada, correo, mensaje, visita, acuerdo, disputa u otra
+             */
+            tipo: string;
+            /** Usuario Id */
+            usuario_id: string;
         };
         /**
          * Panel
@@ -599,6 +683,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DetalleCliente"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    gestiones_api_v1_clientes__cliente_nit__gestiones_get: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
+                "x-empresa-id": string;
+            };
+            path: {
+                cliente_nit: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Gestion"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    registrar_gestion_api_v1_clientes__cliente_nit__gestiones_post: {
+        parameters: {
+            query?: {
+                corte?: string | null;
+            };
+            header: {
+                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
+                "x-empresa-id": string;
+            };
+            path: {
+                cliente_nit: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NuevaGestion"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Gestion"];
                 };
             };
             /** @description Validation Error */

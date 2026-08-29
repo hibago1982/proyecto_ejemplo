@@ -31,6 +31,7 @@ from ...core.tipos import Prioridad
 from .configuracion import ConfiguracionCartera
 from .creditos import aplicar_creditos
 from .datos import Movimiento
+from .historial import SIN_HISTORIAL, HistorialGestion
 from .indicadores import IndicadoresGlobales, PerfilCliente
 from .reglas import (
     ETIQUETAS_ALERTA,
@@ -59,6 +60,11 @@ class MotorCartera:
             )
 
         movimientos = self._filtrar_empresa(filas, contexto.empresa_id)
+        historial = contexto.historial or SIN_HISTORIAL
+        if not isinstance(historial, HistorialGestion):
+            raise TypeError(
+                "El contexto debe traer un HistorialGestion, o None si no hay."
+            )
         resultado = ResultadoMotor()
         activas, resultado.reglas_inactivas = self._separar_reglas(config, contexto)
 
@@ -87,7 +93,12 @@ class MotorCartera:
             perfil.acumular(mov.saldo, dias, bucket)
             globales.acumular(mov.saldo, dias, bucket)
 
-            ctx_factura = ContextoFactura(movimiento=mov, dias=dias, bucket=bucket)
+            ctx_factura = ContextoFactura(
+                movimiento=mov, dias=dias, bucket=bucket,
+                dias_sin_gestion=historial.dias_sin_gestion(
+                    (mov.cliente_nit, mov.factura), contexto.corte
+                ),
+            )
             disparadas = [
                 (regla, exp)
                 for regla in reglas_factura

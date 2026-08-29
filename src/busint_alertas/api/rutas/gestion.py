@@ -11,9 +11,17 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 
+from ...core.tipos import TipoGestion
+from ...persistencia import gestion as gestion_bd
 from .. import consultas
 from ..dependencias import CorteResuelto, Empresa, SesionBD
-from ..esquemas import DetalleCliente, FilaGestion, ListaGestion
+from ..esquemas import (
+    DetalleCliente,
+    FilaGestion,
+    Gestion,
+    ListaGestion,
+    NuevaGestion,
+)
 
 router = APIRouter(tags=["gestion"])
 
@@ -89,4 +97,68 @@ def detalle(
         prioridad_etiqueta=consultas.etiqueta_prioridad(perfil.prioridad),
         marcadores=list(perfil.marcadores or []),
         alertas=[_a_fila(a, {perfil.cliente_nit: perfil.cliente_nombre}) for a in alertas],
+        gestiones=[
+            Gestion.model_validate(g)
+            for g in gestion_bd.historial_de(sesion, empresa_id, cliente_nit)
+        ],
     )
+
+
+@router.post(
+    "/clientes/{cliente_nit}/gestiones",
+    response_model=Gestion,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar una gestion de cobranza",
+)
+def registrar_gestion(
+    sesion: SesionBD,
+    empresa_id: Empresa,
+    cliente_nit: str,
+    peticion: NuevaGestion,
+    corte: CorteResuelto,
+) -> Gestion:
+    """§11: el gestor registra la gestion y la alerta pasa a gestionada.
+
+    No toca el saldo ni el bucket. §16 separa el estado de la gestion del de la
+    factura: una factura sigue vencida aunque ya se haya gestionado.
+    """
+    try:
+        tipo = TipoGestion(peticion.tipo)
+    except ValueError:
+        validos = ", ".join(t.value for t in TipoGestion)
+        raise HTTPException(
+            422, f"Tipo de gestion '{peticion.tipo}' no valido. Use: {validos}."
+        ) from None
+
+    try:
+        fila = gestion_bd.registrar(
+            sesion, empresa_id, corte,
+            gestion_bd.NuevaGestion(
+                cliente_nit=cliente_nit,
+                factura=peticion.factura,
+                usuario_id=peticion.usuario_id,
+                tipo=tipo,
+                resultado=peticion.resultado,
+                observacion=peticion.observacion,
+                compromiso_fecha=peticion.compromiso_fecha,
+                compromiso_valor=peticion.compromiso_valor,
+            ),
+        )
+    except gestion_bd.ErrorDeGestion as e:
+        # 422 y no 404: la peticion esta bien formada pero no es aplicable.
+        raise HTTPException(422, str(e)) from None
+    return Gestion.model_validate(fila)
+
+
+@router.get(
+    "/clientes/{cliente_nit}/gestiones",
+    response_model=list[Gestion],
+    summary="Historial de gestiones del cliente",
+)
+def gestiones(
+    sesion: SesionBD, empresa_id: Empresa, cliente_nit: str
+) -> list[Gestion]:
+    return [
+        Gestion.model_validate(g)
+        for g in gestion_bd.historial_de(sesion, empresa_id, cliente_nit)
+    ]

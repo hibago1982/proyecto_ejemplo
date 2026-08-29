@@ -24,7 +24,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Iterable, Sequence
 
-from sqlalchemy import delete, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..core.alerta import Alerta as AlertaDominio
@@ -115,6 +115,7 @@ class RepositorioCartera:
                 )
             )
         }
+        primeros = self._primeros_cortes(empresa_id)
 
         insertadas = actualizadas = 0
         vistas: set[tuple[str, str, str]] = set()
@@ -140,6 +141,7 @@ class RepositorioCartera:
                 fila = modelo.Alerta(
                     empresa_id=empresa_id, corte=corte,
                     cliente_nit=clave[0], factura=clave[1], regla=clave[2],
+                    primer_corte=primeros.get(clave[:2], corte),
                 )
                 self.sesion.add(fila)
                 insertadas += 1
@@ -149,6 +151,23 @@ class RepositorioCartera:
 
         return insertadas, actualizadas
 
+    def _primeros_cortes(self, empresa_id: str) -> dict[tuple[str, str], date]:
+        """Desde cuando existe la alerta de cada factura.
+
+        Es la referencia de A12 cuando nunca se ha gestionado. Se resuelve en
+        una consulta agregada y no una por alerta.
+        """
+        filas = self.sesion.execute(
+            select(
+                modelo.Alerta.cliente_nit,
+                modelo.Alerta.factura,
+                func.min(modelo.Alerta.primer_corte),
+            )
+            .where(modelo.Alerta.empresa_id == empresa_id)
+            .group_by(modelo.Alerta.cliente_nit, modelo.Alerta.factura)
+        ).all()
+        return {(nit, fac): primer for nit, fac, primer in filas if primer is not None}
+
     @staticmethod
     def _volcar(fila: modelo.Alerta, alerta: AlertaDominio) -> None:
         datos = dict(alerta.datos)
@@ -156,7 +175,12 @@ class RepositorioCartera:
         fila.etiqueta = alerta.etiqueta
         fila.prioridad = alerta.prioridad.value
         fila.accion = alerta.accion
-        fila.estado = alerta.estado.value
+        # El estado NO se sobrescribe desde el motor. El motor siempre emite
+        # ACTIVA porque no sabe de gestiones; volcar ese valor borraria el
+        # trabajo del gestor en cada reproceso. §16 lo exige ademas de forma
+        # expresa: el estado de la gestion es independiente del de la factura.
+        if fila.estado is None:
+            fila.estado = alerta.estado.value
         fila.bucket = datos.get("bucket")
         fila.dias = datos.get("dias")
         fila.saldo = datos.get("saldo")

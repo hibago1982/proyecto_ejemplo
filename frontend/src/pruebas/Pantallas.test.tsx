@@ -158,11 +158,12 @@ describe("Detalle del cliente", () => {
     expect(screen.getByText(/bruto .* − crédito/)).toBeInTheDocument();
   });
 
-  it("dice que el historial de gestiones es de la fase 6", async () => {
+  it("ofrece registrar una gestión y muestra el historial vacío", async () => {
     montar(<DetalleCliente cliente={clienteFalso()} nit="90010001818" />);
     await waitFor(() =>
-      expect(screen.getByText(/es de la fase 6/)).toBeInTheDocument(),
+      expect(screen.getByText("Registrar gestión")).toBeInTheDocument(),
     );
+    expect(screen.getByText(/Todavía no se ha registrado/)).toBeInTheDocument();
   });
 
   it("un cliente inexistente muestra el mensaje del backend", async () => {

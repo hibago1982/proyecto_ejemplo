@@ -311,6 +311,13 @@
             "title": "Dias Max",
             "type": "integer"
           },
+          "gestiones": {
+            "items": {
+              "$ref": "#/components/schemas/Gestion"
+            },
+            "title": "Gestiones",
+            "type": "array"
+          },
           "marcadores": {
             "items": {
               "type": "string"
@@ -657,6 +664,107 @@
         "title": "FilaGestion",
         "type": "object"
       },
+      "Gestion": {
+        "properties": {
+          "cliente_nit": {
+            "title": "Cliente Nit",
+            "type": "string"
+          },
+          "compromiso_fecha": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compromiso Fecha"
+          },
+          "compromiso_valor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compromiso Valor"
+          },
+          "corte": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corte"
+          },
+          "factura": {
+            "title": "Factura",
+            "type": "string"
+          },
+          "fecha": {
+            "format": "date-time",
+            "title": "Fecha",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "observacion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacion"
+          },
+          "resultado": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resultado"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          },
+          "usuario_id": {
+            "title": "Usuario Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "cliente_nit",
+          "factura",
+          "fecha",
+          "corte",
+          "usuario_id",
+          "tipo",
+          "resultado",
+          "compromiso_fecha",
+          "compromiso_valor",
+          "observacion"
+        ],
+        "title": "Gestion",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -705,6 +813,84 @@
           "filas"
         ],
         "title": "ListaGestion",
+        "type": "object"
+      },
+      "NuevaGestion": {
+        "description": "Lo que registra el gestor tras contactar al cliente.\n\nEl compromiso de pago es opcional, pero si va, van sus dos partes: media\npromesa no se puede seguir.",
+        "properties": {
+          "compromiso_fecha": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compromiso Fecha"
+          },
+          "compromiso_valor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compromiso Valor"
+          },
+          "factura": {
+            "default": "",
+            "description": "Vacio para una alerta de cliente.",
+            "title": "Factura",
+            "type": "string"
+          },
+          "observacion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacion"
+          },
+          "resultado": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resultado"
+          },
+          "tipo": {
+            "description": "llamada, correo, mensaje, visita, acuerdo, disputa u otra",
+            "title": "Tipo",
+            "type": "string"
+          },
+          "usuario_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Usuario Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tipo",
+          "usuario_id"
+        ],
+        "title": "NuevaGestion",
         "type": "object"
       },
       "Panel": {
@@ -1084,6 +1270,142 @@
           }
         },
         "summary": "Detalle del cliente",
+        "tags": [
+          "gestion"
+        ]
+      }
+    },
+    "/api/v1/clientes/{cliente_nit}/gestiones": {
+      "get": {
+        "operationId": "gestiones_api_v1_clientes__cliente_nit__gestiones_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cliente_nit",
+            "required": true,
+            "schema": {
+              "title": "Cliente Nit",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Gestion"
+                  },
+                  "title": "Response Gestiones Api V1 Clientes  Cliente Nit  Gestiones Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Historial de gestiones del cliente",
+        "tags": [
+          "gestion"
+        ]
+      },
+      "post": {
+        "description": "§11: el gestor registra la gestion y la alerta pasa a gestionada.\n\nNo toca el saldo ni el bucket. §16 separa el estado de la gestion del de la\nfactura: una factura sigue vencida aunque ya se haya gestionado.",
+        "operationId": "registrar_gestion_api_v1_clientes__cliente_nit__gestiones_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cliente_nit",
+            "required": true,
+            "schema": {
+              "title": "Cliente Nit",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "corte",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Corte"
+            }
+          },
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NuevaGestion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Gestion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Registrar una gestion de cobranza",
         "tags": [
           "gestion"
         ]

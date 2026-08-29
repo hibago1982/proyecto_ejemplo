@@ -39,6 +39,8 @@ class ContextoFactura:
     movimiento: Movimiento
     dias: int
     bucket: Bucket
+    dias_sin_gestion: int | None = None
+    """Dias que lleva la alerta sin gestion. None si es nueva en este corte."""
 
 
 @dataclass(frozen=True)
@@ -221,6 +223,30 @@ def _r06_preventiva(ctx: ContextoFactura, p: Parametros) -> Explicacion | None:
     return None
 
 
+def _a12_sin_gestion(ctx: ContextoFactura, p: Parametros) -> Explicacion | None:
+    """A12 - la alerta lleva X dias activa sin gestion registrada (§7, §11).
+
+    Solo se evalua desde la fase 6, cuando ar_gestion tiene datos. C-07 lo
+    advertia: activarla antes la dispararia siempre, porque ninguna alerta
+    tendria gestion contra la cual evaluarse.
+
+    Una alerta nacida en este mismo corte no dispara: `dias_sin_gestion` viene
+    en None y no hay desde cuando contar.
+    """
+    if ctx.dias_sin_gestion is None:
+        return None
+    umbral = p.entero("dias_sin_gestion")
+    if ctx.dias_sin_gestion >= umbral:
+        return Explicacion(
+            regla="A12",
+            motivo=f"lleva {ctx.dias_sin_gestion} dias sin gestion registrada",
+            parametro="dias_sin_gestion",
+            valor_parametro=umbral,
+            valor_observado=ctx.dias_sin_gestion,
+        )
+    return None
+
+
 def _a11_concentracion_mayor_90(
     ctx: ContextoCliente, p: Parametros
 ) -> Explicacion | None:
@@ -334,9 +360,9 @@ REGLAS: tuple[DefinicionRegla, ...] = (
         alerta="A12",
         parametros_requeridos=("dias_sin_gestion",),
         fase=Fase.F5_GESTION,
-        evaluar=None,
-        nota="C-07: depende del historial de gestion, que no existe antes de la "
-        "fase 5. Activarla antes la dispararia siempre.",
+        evaluar=_a12_sin_gestion,
+        nota="C-07: depende del historial de gestion. No se evalua antes de la "
+        "fase 5, porque sin gestiones registradas se disparia siempre.",
     ),
 )
 

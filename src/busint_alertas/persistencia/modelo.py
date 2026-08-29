@@ -143,6 +143,14 @@ class Alerta(Base):
     detectado_pago: Mapped[date | None] = mapped_column(Date)
     """Fecha en que se detecto que la factura ya no estaba abierta (C-18)."""
 
+    primer_corte: Mapped[date | None] = mapped_column(Date)
+    """Primer corte en que aparecio esta alerta para esta factura y regla.
+
+    Es la referencia de A12 cuando nunca se ha gestionado. Sin ella habria que
+    deducir la antiguedad recorriendo todos los cortes anteriores en cada
+    corrida, que es justo lo que el snapshot existe para evitar.
+    """
+
     actualizado: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -231,6 +239,8 @@ class Gestion(Base):
     compromiso_fecha: Mapped[date | None] = mapped_column(Date)
     compromiso_valor: Mapped[Decimal | None] = mapped_column(DINERO)
     observacion: Mapped[str | None] = mapped_column(Text)
+    corte: Mapped[date | None] = mapped_column(Date)
+    """Corte en que se registro la gestion, para poder reproducir el estado."""
 
 
 class AuditoriaConfig(Base):

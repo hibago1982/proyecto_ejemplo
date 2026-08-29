@@ -155,6 +155,43 @@ class DetalleCliente(Modelo):
     prioridad_etiqueta: str
     marcadores: list[str]
     alertas: list[FilaGestion]
+    gestiones: list[Gestion] = Field(default_factory=list)
+    """Historial de cobranza (§8.3), de lo mas reciente a lo mas antiguo."""
+
+
+# --------------------------------------------------------------------------
+# Gestion de cobranza (§11)
+# --------------------------------------------------------------------------
+
+
+class NuevaGestion(BaseModel):
+    """Lo que registra el gestor tras contactar al cliente.
+
+    El compromiso de pago es opcional, pero si va, van sus dos partes: media
+    promesa no se puede seguir.
+    """
+
+    factura: str = Field(default="", description="Vacio para una alerta de cliente.")
+    tipo: str = Field(description="llamada, correo, mensaje, visita, acuerdo, disputa u otra")
+    usuario_id: str = Field(min_length=1, max_length=64)
+    resultado: str | None = Field(default=None, max_length=64)
+    observacion: str | None = None
+    compromiso_fecha: date | None = None
+    compromiso_valor: Decimal | None = None
+
+
+class Gestion(Modelo):
+    id: int
+    cliente_nit: str
+    factura: str
+    fecha: datetime
+    corte: date | None
+    usuario_id: str
+    tipo: str
+    resultado: str | None
+    compromiso_fecha: date | None
+    compromiso_valor: Monto | None
+    observacion: str | None
 
 
 # --------------------------------------------------------------------------

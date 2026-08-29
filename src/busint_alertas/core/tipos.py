@@ -46,15 +46,37 @@ class Prioridad(Enum):
 
 
 class EstadoAlerta(Enum):
-    """Ciclo de vida de una alerta.
+    """Ciclo de vida de una alerta, segun §12.
+
+    §16 lo exige de forma expresa: el estado de la gestion es independiente del
+    estado de la factura. Una factura puede seguir vencida y subiendo de bucket
+    aunque ya se haya gestionado; GESTIONADA dice que alguien la trabajo, no
+    que el cliente haya pagado.
 
     CERRADA_POR_PAGO se determina por ausencia en el origen, no por un evento
     del ERP (C-18): el motor la marca cuando la entidad deja de aparecer.
     """
 
     ACTIVA = "activa"
+    GESTIONADA = "gestionada"
     CERRADA_POR_PAGO = "cerrada_por_pago"
     CERRADA_MANUAL = "cerrada_manual"
+
+    @property
+    def esta_abierta(self) -> bool:
+        return self in (EstadoAlerta.ACTIVA, EstadoAlerta.GESTIONADA)
+
+
+class TipoGestion(Enum):
+    """Formas de gestion que §11 enumera."""
+
+    LLAMADA = "llamada"
+    CORREO = "correo"
+    MENSAJE = "mensaje"
+    VISITA = "visita"
+    ACUERDO = "acuerdo"
+    DISPUTA = "disputa"
+    OTRA = "otra"
 
 
 class Fase(Enum):

@@ -1,5 +1,5 @@
 /** Respuestas de ejemplo, con las cifras reales del archivo de prueba. */
-import type { Corte, DetalleCliente, FilaGestion, ListaGestion, Panel } from "../api/cliente";
+import type { Corte, DetalleCliente, FilaGestion, Gestion, ListaGestion, Panel } from "../api/cliente";
 
 export const PANEL: Panel = {
   empresa_id: "E01",
@@ -132,4 +132,34 @@ export const DETALLE: DetalleCliente = {
   prioridad_etiqueta: "Muy alta",
   marcadores: ["M04"],
   alertas: [FILA, FILA_CON_CREDITO, FILA_DE_CLIENTE],
+  gestiones: [],
 };
+
+export const GESTIONES: Gestion[] = [
+  {
+    id: 2,
+    cliente_nit: "90010001818",
+    factura: "3018",
+    fecha: "2026-08-20T14:30:00",
+    corte: "2026-08-21",
+    usuario_id: "hbarrera",
+    tipo: "acuerdo",
+    resultado: "Acuerdo de pago",
+    compromiso_fecha: "2026-09-15",
+    compromiso_valor: "5000000.00",
+    observacion: "Pagará la mitad el 15 y el resto a fin de mes.",
+  },
+  {
+    id: 1,
+    cliente_nit: "90010001818",
+    factura: "3018",
+    fecha: "2026-08-18T09:00:00",
+    corte: "2026-08-21",
+    usuario_id: "hbarrera",
+    tipo: "llamada",
+    resultado: "Sin respuesta",
+    compromiso_fecha: null,
+    compromiso_valor: null,
+    observacion: null,
+  },
+];
