@@ -7,13 +7,16 @@ reproducibles los cortes historicos (C-16) y deterministas las pruebas.
 
 El orden de evaluacion importa y es este:
 
-  1. Clasificar cada factura en su bucket y acumular el perfil del cliente.
-  2. Evaluar las reglas de ambito factura sobre cada factura.
-  3. Evaluar las reglas de ambito cliente sobre el perfil ya completo.
-  4. Consolidar la prioridad de cada cliente.
+  1. Aplicar los creditos del cliente a sus facturas mas antiguas (C-10).
+  2. Clasificar cada factura en su bucket y acumular el perfil del cliente.
+  3. Evaluar las reglas de ambito factura sobre cada factura.
+  4. Evaluar las reglas de ambito cliente sobre el perfil ya completo.
+  5. Consolidar la prioridad de cada cliente.
 
-Las reglas de cliente van despues porque necesitan agregados (n_vencidas, pct_90)
-que solo existen una vez recorridas todas las facturas.
+Los creditos van primero porque cambian el saldo, y el saldo alimenta tanto el
+aging como los umbrales monetarios. Las reglas de cliente van al final porque
+necesitan agregados (n_vencidas, pct_90) que solo existen una vez recorridas
+todas las facturas.
 """
 
 from __future__ import annotations
@@ -24,6 +27,7 @@ from ...core.alerta import Alerta, Marcador
 from ...core.motor import ContextoEjecucion, ResultadoMotor
 from ...core.tipos import Prioridad
 from .configuracion import ConfiguracionCartera
+from .creditos import aplicar_creditos
 from .datos import Movimiento
 from .indicadores import IndicadoresGlobales, PerfilCliente
 from .reglas import (
@@ -56,10 +60,15 @@ class MotorCartera:
         resultado = ResultadoMotor()
         activas, resultado.reglas_inactivas = self._separar_reglas(config, contexto)
 
+        # --- Paso 1: creditos, antes de cualquier calculo sobre el saldo ---
+        movimientos, aplicaciones = aplicar_creditos(movimientos)
+        saldadas = [m for m in movimientos if m.saldo <= 0 and m.credito_aplicado > 0]
+        movimientos = [m for m in movimientos if m.saldo > 0]
+
         perfiles: dict[str, PerfilCliente] = {}
         globales = IndicadoresGlobales()
 
-        # --- Paso 1 y 2: clasificacion y reglas de factura ---
+        # --- Pasos 2 y 3: clasificacion y reglas de factura ---
         reglas_factura = [r for r in activas if r.ambito == Ambito.FACTURA]
         for mov in movimientos:
             dias = mov.dias_vencimiento(contexto.corte)
@@ -95,6 +104,8 @@ class MotorCartera:
                             "bucket": bucket.codigo,
                             "dias": dias,
                             "saldo": mov.saldo,
+                            "saldo_bruto": mov.saldo_bruto,
+                            "credito_aplicado": mov.credito_aplicado,
                             "vendedor": mov.vendedor,
                             "zona": mov.zona,
                         },
@@ -104,7 +115,7 @@ class MotorCartera:
 
             perfil.prioridad = max(perfil.prioridad, prioridad_factura)
 
-        # --- Paso 3: reglas de cliente, sobre el perfil ya completo ---
+        # --- Paso 4: reglas de cliente, sobre el perfil ya completo ---
         reglas_cliente = [r for r in activas if r.ambito == Ambito.CLIENTE]
         for nit, perfil in perfiles.items():
             ctx_cliente = ContextoCliente(
@@ -125,10 +136,22 @@ class MotorCartera:
                 self._emitir_cliente(resultado, perfil, regla, explicacion)
                 perfil.prioridad = max(perfil.prioridad, regla.prioridad)
 
+        # Un cliente cuyo credito cubre toda su cartera se queda sin facturas
+        # abiertas y por tanto sin perfil. Su saldo a favor se reporta aparte
+        # para que no desaparezca del resultado junto con el.
+        a_favor = [
+            (a.cliente_nit, a.no_aplicado) for a in aplicaciones if a.no_aplicado > 0
+        ]
+
         globales.n_clientes = len(perfiles)
         resultado.indicadores = {
             "globales": globales.como_dict(),
             "clientes": perfiles,
+            "creditos": aplicaciones,
+            "creditos_a_favor": a_favor,
+            "facturas_saldadas_por_credito": [
+                (m.cliente_nit, m.factura, m.saldo_bruto) for m in saldadas
+            ],
         }
         return resultado
 

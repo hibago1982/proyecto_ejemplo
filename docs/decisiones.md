@@ -21,7 +21,7 @@ implementacion. Etapa 1 (motor de reglas) es la unica construida por ahora.
 |----|-------------------|-------|
 | C-08 | `empresa_id` obligatorio en toda fila y aplicado como filtro en el motor, no solo en la consulta. | `datos.py` · `motor.py::_filtrar_empresa` |
 | C-09 | COP, `Decimal` con dos decimales, redondeo a pesos solo en presentacion. | `core/dinero.py` |
-| C-10 | **Pendiente de negocio.** El campo `valor_credito` se transporta pero no se resta. Ver `pendientes.md`. | `datos.py` |
+| C-10 | **Cerrada.** El credito no viene neteado. Es del cliente, no de la fila en que viaja, y se aplica a la factura mas antigua por vencimiento, en cascada. El saldo neto es el que usan las reglas y el que muestra la alerta. | `motores/cartera/creditos.py` · `tests/cartera/test_creditos.py` |
 | C-11 | `America/Bogota` como zona del motor. El corte llega como dato, nunca `date.today()`. | `core/fechas.py` · `core/motor.py::ContextoEjecucion` |
 | C-12 | **Pendiente de negocio.** `vendedor` y `zona` se transportan en la alerta para soportar cualquiera de las tres reglas de asignacion. | `motor.py` (campo `datos`) |
 | C-13 | Roles: fase 8. No implementado. | — |

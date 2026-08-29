@@ -30,8 +30,27 @@ class Movimiento:
     fecha_emision: date
     fecha_vencimiento: date
     saldo: Decimal
+    """Saldo sobre el que operan las reglas.
+
+    Antes de aplicar creditos es el saldo bruto del ERP; despues de
+    `aplicar_creditos` es el saldo neto. Las reglas usan siempre este campo, de
+    modo que ninguna tiene que saber si hubo notas credito o no.
+    """
+
     cliente_nombre: str = ""
     valor_credito: Decimal = Decimal("0.00")
+    """Nota credito o abono sin aplicar que trae el ERP en esta fila.
+
+    C-10: no viene neteado contra el saldo. Es un credito del cliente, no de
+    esta factura en particular, y se aplica a la mas antigua.
+    """
+
+    saldo_bruto: Decimal | None = None
+    """Saldo original, antes de aplicar creditos. None si aun no se aplicaron."""
+
+    credito_aplicado: Decimal = Decimal("0.00")
+    """Cuanto credito absorbio esta factura."""
+
     vendedor: str = ""
     zona: str = ""
     ciudad: str = ""
@@ -42,6 +61,9 @@ class Movimiento:
         # preocuparse por recibir float, str o int desde el conector del ERP.
         object.__setattr__(self, "saldo", monto(self.saldo))
         object.__setattr__(self, "valor_credito", monto(self.valor_credito))
+        object.__setattr__(self, "credito_aplicado", monto(self.credito_aplicado))
+        if self.saldo_bruto is not None:
+            object.__setattr__(self, "saldo_bruto", monto(self.saldo_bruto))
         if self.fecha_vencimiento < self.fecha_emision:
             raise ValueError(
                 f"Factura {self.factura}: la fecha de vencimiento "
@@ -58,3 +80,13 @@ class Movimiento:
         120 filas del archivo de prueba.
         """
         return (corte - self.fecha_vencimiento).days
+
+    @property
+    def orden_antiguedad(self) -> tuple:
+        """Clave para ordenar de mas antigua a mas reciente.
+
+        Se ordena por vencimiento y no por emision porque en cartera "la mas
+        antigua" es la que lleva mas dias vencida. El numero de factura entra
+        como desempate para que el resultado no dependa del orden de llegada.
+        """
+        return (self.fecha_vencimiento, self.fecha_emision, self.factura)

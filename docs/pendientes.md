@@ -18,12 +18,13 @@ pero no la reemplaza. Estas partes se citan y no llegaron:
 Las ocho decisiones del documento siguen abiertas. Estas tres afectan el motor y
 no dependen de infraestructura, asi que son las primeras:
 
-1. **C-10 — ¿el saldo abierto del ERP ya viene neto de notas credito y abonos?**
-   Sigue abierta. El archivo de prueba **no la responde**: `Valor Credito` es 0
-   en las 120 filas y `Valor Total` es igual a `Valor Original` en todas, asi
-   que el caso nunca se ejerce. Hay que validarlo contra el modelo real de
-   Busint. Hoy el motor usa `Valor Total` como saldo y transporta
-   `valor_credito` sin restarlo.
+1. ~~**C-10 — notas credito y abonos.**~~ **Cerrada por decision de negocio:**
+   el saldo no viene neteado; el credito se aplica a la factura mas antigua y
+   el saldo neto es el que lleva la alerta. Implementado en `creditos.py`.
+   Queda pendiente **validar contra el modelo real** que `Valor Credito` es
+   efectivamente un credito del cliente sin aplicar: el archivo de prueba no lo
+   ejerce (es 0 en las 120 filas), asi que la logica no se ha corrido nunca
+   contra un caso real.
 2. **Umbrales reales** de R01, R02, `n_facturas_vencidas`, `dias_preventivos` y
    `pct_mayor_90_umbral`. Mientras no los fije la empresa, esas reglas quedan
    inactivas por diseno (C-05).
@@ -56,7 +57,20 @@ Ninguna estaba en el documento; aparecieron al escribir el codigo.
    separa en B01 (C-14) y `COLUMNAS_ERP` guarda la equivalencia para poder
    reproducir las columnas del ERP en la exportacion de §9. Falta decidir cual
    de las dos lecturas se presenta como oficial en el panel.
-7. **Contrato del API del ERP.** `FuenteAPI` asume una respuesta con la lista
+7. **Sobre la aplicacion de creditos**, tres decisiones que la regla no cubria
+   y que se tomaron de forma explicita:
+   - **Cascada.** Si el credito supera la factura mas antigua, el remanente
+     pasa a la siguiente. Descartarlo perderia dinero del cliente.
+   - **"Mas antigua" se mide por fecha de vencimiento**, no de emision. En el
+     archivo de prueba da igual porque todos los plazos son de 30 dias, pero
+     con plazos distintos no. Confirmar cual es el criterio de Busint.
+   - **Una factura que el credito deja en cero no genera alerta** y no cuenta
+     para R03. Cobrar cero es ruido. Queda registrada en
+     `facturas_saldadas_por_credito`.
+   - Si el credito cubre toda la cartera del cliente, el sobrante se reporta en
+     `creditos_a_favor`, porque ese cliente ya no aparece en la lista de
+     trabajo y su saldo a favor se perderia.
+8. **Contrato del API del ERP.** `FuenteAPI` asume una respuesta con la lista
    en `datos` y la pagina siguiente en `siguiente`. Ambos son parametrizables,
    pero hay que confirmarlos contra el API real, junto con el metodo de
    autenticacion (hoy Bearer) y si acepta la fecha de corte como parametro.
