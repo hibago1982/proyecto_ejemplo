@@ -34,6 +34,8 @@ class PerfilCliente:
     n_vencidas: int = 0
     prioridad: Prioridad = Prioridad.INFORMATIVA
     marcadores: list[str] = field(default_factory=list)
+    por_bucket: dict[str, Decimal] = field(default_factory=dict)
+    """Totales por bucket. Es lo que congela el snapshot del corte (C-16)."""
 
     @property
     def cartera_total(self) -> Decimal:
@@ -51,6 +53,9 @@ class PerfilCliente:
     def acumular(self, saldo: Decimal, dias: int, bucket: Bucket) -> None:
         """Suma una factura al perfil, clasificandola segun su bucket."""
         self.n_facturas += 1
+        self.por_bucket[bucket.codigo] = monto(
+            self.por_bucket.get(bucket.codigo, CERO) + saldo
+        )
         if bucket.es_por_vencer:
             self.por_vencer = monto(self.por_vencer + saldo)
         elif bucket.es_vence_hoy:

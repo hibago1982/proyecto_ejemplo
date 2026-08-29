@@ -24,7 +24,7 @@ implementacion. Etapa 1 (motor de reglas) es la unica construida por ahora.
 | C-10 | **Cerrada.** El credito no viene neteado. Es del cliente, no de la fila en que viaja, y se aplica a la factura mas antigua por vencimiento, en cascada. El saldo neto es el que usan las reglas y el que muestra la alerta. | `motores/cartera/creditos.py` · `tests/cartera/test_creditos.py` |
 | C-11 | `America/Bogota` como zona del motor. El corte llega como dato, nunca `date.today()`. | `core/fechas.py` · `core/motor.py::ContextoEjecucion` |
 | C-12 | **Pendiente de negocio.** `vendedor` y `zona` se transportan en la alerta para soportar cualquiera de las tres reglas de asignacion. | `motor.py` (campo `datos`) |
-| C-13 | Roles: fase 8. No implementado. | — |
+| C-13 | Roles: fase 8. La auditoria de cambios ya registra usuario. | `persistencia/modelo.py::AuditoriaConfig` |
 | C-14 | Identidad explicita `total = por vencer + vence hoy + vencida`, comprobada en pruebas. | `indicadores.py` · `tests/cartera/test_indicadores.py` |
 | C-15 | Linea base aceptada. El motor es O(n) sobre las filas y no consulta nada por factura. | `motor.py` |
 
@@ -32,9 +32,9 @@ implementacion. Etapa 1 (motor de reglas) es la unica construida por ahora.
 
 | ID | Decision adoptada | Donde |
 |----|-------------------|-------|
-| C-16 | El motor es puro y determinista, que es la precondicion para reproducir un corte pasado. `ar_snapshot` es fase 2. | `motor.py` · `tests/cartera/test_indicadores.py::TestDeterminismo` |
-| C-17 | Fase 2 (restriccion unica en base de datos). La clave logica ya esta en la alerta: empresa + corte + sujeto + entidad + regla. | `core/alerta.py` |
-| C-18 | Cierre por ausencia implementado como funcion pura, lista para que la fase 2 la invoque. | `motores/cartera/conciliacion.py` |
+| C-16 | `ar_snapshot` obligatoria. Cada corrida congela el corte con su huella de parametros; un corte pasado se lee de ahi y nunca del ERP. | `persistencia/repositorio.py::_upsert_snapshot` · `tests/persistencia/test_reproceso.py::TestSnapshot` |
+| C-17 | Restriccion unica materializada sobre empresa + corte + cliente + factura + regla, y toda escritura es upsert. Las alertas de cliente usan cadena vacia y no NULL. | `persistencia/modelo.py::Alerta` · `tests/persistencia/test_reproceso.py::TestReprocesoSinDuplicados` |
+| C-18 | Cierre por ausencia contra el corte anterior, con fecha de deteccion. | `persistencia/repositorio.py::_cerrar_por_ausencia` |
 
 ## Arquitectura de la aplicacion multi-motor
 

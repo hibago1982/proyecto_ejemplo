@@ -16,19 +16,22 @@ depende de decisiones de infraestructura pendientes.
 |-------|--------|
 | 0. Contrato de datos | Parcial — mapeo del archivo plano cerrado; falta validar C-10 y el modelo SQL |
 | 1. Motor de reglas | **Completo** — las 6 reglas de §5.4, el catalogo A01–A12, T01–T12 y la reconciliacion |
-| 2. Persistencia (PostgreSQL) | Pendiente |
+| 2. Persistencia (PostgreSQL) | **Completa** — esquema, migraciones, snapshot y cierre por ausencia |
 | 3. API (FastAPI) | Pendiente |
 | 4–8 | Pendiente |
 
 ## Estructura
 
     src/busint_alertas/
-      core/        # comun a todos los motores: contrato, alerta, parametros, dinero, fechas
-      fuentes/     # origenes de datos: Excel, CSV, API REST del ERP
+      core/          # comun a todos los motores: contrato, alerta, parametros, dinero, fechas
+      fuentes/       # origenes de datos: Excel, CSV, API REST del ERP
+      persistencia/  # esquema PostgreSQL, repositorio, configuracion en base
       motores/
-        cartera/   # buckets, reglas R01-R06, indicadores de §6, conciliacion
+        cartera/     # buckets, reglas R01-R06, indicadores de §6, conciliacion
+      ejecucion.py   # corrida completa: leer, evaluar, persistir
+    migraciones/     # Alembic
     tests/
-      datos/       # archivo de prueba sintetico de BUSINT (30 NIT, 120 facturas)
+      datos/         # archivo de prueba sintetico de BUSINT (30 NIT, 120 facturas)
     docs/
       decisiones.md   # los 18 hallazgos C-01..C-18 y donde vive cada uno
       pendientes.md   # que falta para cerrar la etapa 1
@@ -82,6 +85,40 @@ for alerta in resultado.alertas:
 
 # Reglas que no se evaluaron, y por que
 print(resultado.reglas_inactivas)
+```
+
+## Persistencia
+
+PostgreSQL 16. El esquema son las entidades de §6.2, con tres piezas que
+resuelven los riesgos tecnicos del analisis:
+
+- **`ar_alerta` lleva restriccion unica** sobre empresa + corte + cliente +
+  factura + regla (C-17). Reprocesar un corte actualiza, no duplica. Las
+  alertas de cliente guardan cadena vacia en `factura` y no NULL, porque en SQL
+  dos NULL no son iguales y la restriccion dejaria pasar duplicados.
+- **`ar_snapshot` es obligatoria** (C-16). Cada corrida congela el corte con su
+  huella de parametros. Reproducir un corte pasado lee de ahi, nunca del ERP,
+  que solo tiene cuentas abiertas de hoy.
+- **Cierre por ausencia** (C-18). Las alertas activas cuya factura ya no
+  aparece se marcan cerradas por pago. Es una conciliacion, no un evento: el
+  ERP no emite ninguno.
+
+```bash
+export BUSINT_DB_URL="postgresql+psycopg://usuario:clave@host/busint_alertas"
+alembic upgrade head
+```
+
+Los buckets y umbrales viven en `ar_aging_param` y `ar_alert_rule`, no en el
+codigo (§8.4 y §16). Cambiar un umbral es un UPDATE con rastro en
+`ar_auditoria_config`, y es asi como R01 y R02 se activan: nacen inactivas y se
+encienden cuando la empresa les asigna valor, sin desplegar nada.
+
+```python
+from busint_alertas.ejecucion import ejecutar_corte
+from busint_alertas.persistencia import fijar_parametro
+
+fijar_parametro(sesion, "E01", "R01", "umbral_saldo_alto", 5_000_000, "hbarrera")
+corrida = ejecutar_corte(sesion, fuente, "E01", date(2026, 8, 21))
 ```
 
 ## Pruebas
