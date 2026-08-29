@@ -18,7 +18,8 @@ depende de decisiones de infraestructura pendientes.
 | 1. Motor de reglas | **Completo** — las 6 reglas de §5.4, el catalogo A01–A12, T01–T12 y la reconciliacion |
 | 2. Persistencia (PostgreSQL) | **Completa** — esquema, migraciones, snapshot y cierre por ausencia |
 | 3. API (FastAPI) | **Completa** — contrato OpenAPI publicado en `contrato/` |
-| 4–8 | Pendiente |
+| 4. Panel de control | **Completo** — React + Vite contra el API real |
+| 5–8 | Pendiente |
 
 ## Estructura
 
@@ -32,7 +33,8 @@ depende de decisiones de infraestructura pendientes.
       ejecucion.py   # corrida completa: leer, evaluar, persistir
     migraciones/     # Alembic
     contrato/        # openapi.json versionado, fuente de los tipos del frontend
-    herramientas/    # generar_contrato.py
+    frontend/        # React 18 + Vite + Tailwind + TanStack Query + Recharts
+    herramientas/    # generar_contrato.py, servidor_demo.py
     tests/
       datos/         # archivo de prueba sintetico de BUSINT (30 NIT, 120 facturas)
     docs/
@@ -157,6 +159,35 @@ Hay una prueba que falla si algun monto se declara `number` en el contrato.
 **La empresa llega en la cabecera `X-Empresa-Id`, y eso todavia no es
 seguridad.** Es un marcador de posicion: §8.4 exige permisos y C-13 define los
 roles, pero son de la fase 8. Ver la advertencia en `api/dependencias.py`.
+
+## Panel de control
+
+![Panel de cartera](panel.png)
+
+React 18 + TypeScript + Vite, con Tailwind para el sistema de diseño de §7.2,
+TanStack Query para la caché y Recharts para el aging. Los tipos no se escriben
+a mano: salen de `contrato/openapi.json`, de modo que un cambio incompatible en
+el backend rompa la compilación del frontend en vez de fallar en silencio.
+
+```bash
+cd frontend
+npm install
+npm run tipos     # regenera src/api/tipos.ts desde el contrato
+npm run dev       # proxy a http://localhost:8000
+npm test
+```
+
+Para verlo funcionando de extremo a extremo con el archivo de prueba:
+
+```bash
+python herramientas/servidor_demo.py   # API en :8000 con el corte ya calculado
+cd frontend && npm run dev             # panel en :5173
+```
+
+**En el frontend no hay lógica de negocio.** Los porcentajes, las prioridades y
+los colores de aging llegan calculados del API. Recalcular cualquiera de ellos
+en el navegador sería una segunda implementación que podría divergir del PDF y
+del Excel, que es justo lo que §16 prohíbe al exigir una sola fuente de cálculo.
 
 ## Pruebas
 

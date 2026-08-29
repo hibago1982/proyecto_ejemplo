@@ -11,7 +11,9 @@ from decimal import Decimal
 
 from fastapi import APIRouter
 
-from ...core.tipos import Prioridad
+from ...core.tipos import Fase, Prioridad
+from ...motores.cartera.reglas import REGLAS
+from ...persistencia import configuracion as config_bd
 from .. import consultas
 from ..dependencias import CorteResuelto, Empresa, SesionBD
 from ..esquemas import BarraAging, ClienteEnRanking, Corte, Panel, TarjetaKPI
@@ -80,8 +82,27 @@ def panel(sesion: SesionBD, empresa_id: Empresa, corte: CorteResuelto) -> Panel:
         kpis=kpis, aging=aging, ranking=ranking,
         n_clientes=len(perfiles),
         n_facturas=sum(conteos.values()),
-        reglas_inactivas={},
+        reglas_inactivas=_reglas_inactivas(sesion, empresa_id),
     )
+
+
+def _reglas_inactivas(sesion, empresa_id: str) -> dict[str, str]:
+    """Reglas que no se estan evaluando, y por que.
+
+    Se deriva de la configuracion vigente en vez de guardarse en la corrida:
+    asi hay una sola definicion de "regla inactiva", la de `inactiva_porque`,
+    y el panel no puede contradecir a la pantalla de configuracion.
+    """
+    try:
+        config = config_bd.cargar(sesion, empresa_id)
+    except LookupError:
+        return {}
+    inactivas = {}
+    for regla in REGLAS:
+        motivo = regla.inactiva_porque(config.parametros, Fase.F2_PERSISTENCIA)
+        if motivo is not None:
+            inactivas[regla.codigo] = motivo
+    return inactivas
 
 
 def _kpi(codigo: str, etiqueta: str, valor: Decimal, total: Decimal) -> TarjetaKPI:
