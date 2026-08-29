@@ -17,7 +17,7 @@ depende de decisiones de infraestructura pendientes.
 | 0. Contrato de datos | Parcial — mapeo del archivo plano cerrado; falta validar C-10 y el modelo SQL |
 | 1. Motor de reglas | **Completo** — las 6 reglas de §5.4, el catalogo A01–A12, T01–T12 y la reconciliacion |
 | 2. Persistencia (PostgreSQL) | **Completa** — esquema, migraciones, snapshot y cierre por ausencia |
-| 3. API (FastAPI) | Pendiente |
+| 3. API (FastAPI) | **Completa** — contrato OpenAPI publicado en `contrato/` |
 | 4–8 | Pendiente |
 
 ## Estructura
@@ -26,10 +26,13 @@ depende de decisiones de infraestructura pendientes.
       core/          # comun a todos los motores: contrato, alerta, parametros, dinero, fechas
       fuentes/       # origenes de datos: Excel, CSV, API REST del ERP
       persistencia/  # esquema PostgreSQL, repositorio, configuracion en base
+      api/           # FastAPI: panel, gestion, detalle, configuracion, ejecucion
       motores/
         cartera/     # buckets, reglas R01-R06, indicadores de §6, conciliacion
       ejecucion.py   # corrida completa: leer, evaluar, persistir
     migraciones/     # Alembic
+    contrato/        # openapi.json versionado, fuente de los tipos del frontend
+    herramientas/    # generar_contrato.py
     tests/
       datos/         # archivo de prueba sintetico de BUSINT (30 NIT, 120 facturas)
     docs/
@@ -120,6 +123,40 @@ from busint_alertas.persistencia import fijar_parametro
 fijar_parametro(sesion, "E01", "R01", "umbral_saldo_alto", 5_000_000, "hbarrera")
 corrida = ejecutar_corte(sesion, fuente, "E01", date(2026, 8, 21))
 ```
+
+## API
+
+FastAPI. El contrato OpenAPI se publica en `contrato/openapi.json` y esta
+versionado a proposito: un cambio incompatible aparece como diferencia en la
+revision de codigo en vez de descubrirse cuando el frontend falla. Una prueba
+falla si el contrato se queda atras del codigo.
+
+```bash
+pip install -e ".[api,bd,planos]"
+uvicorn --factory 'mi_arranque:app'   # ver crear_app en api/app.py
+python herramientas/generar_contrato.py
+npx openapi-typescript contrato/openapi.json -o src/api/tipos.ts   # frontend
+```
+
+| Endpoint | Seccion |
+|----------|---------|
+| `GET /api/v1/panel` | §8.1 KPIs, aging y ranking en una sola respuesta |
+| `GET /api/v1/gestion` | §8.2 bandeja filtrable y ordenable, con paginacion |
+| `GET /api/v1/clientes/{nit}` | §8.3 indicadores y alertas del cliente |
+| `GET /api/v1/configuracion` | §8.4 buckets, reglas y umbrales pendientes |
+| `PUT /api/v1/configuracion/reglas/{codigo}/parametros/{nombre}` | Fijar un umbral, con auditoria |
+| `POST /api/v1/ejecucion` | §10.2 corrida manual y reproceso |
+| `GET /api/v1/cortes` | Cortes disponibles para el selector de fecha |
+
+**Los montos viajan como cadena, no como numero.** JSON no tiene decimales
+exactos y un `float` de JavaScript no representa 1234567.89 sin error; C-09
+exige conservar los dos decimales en el calculo y en la auditoria, y
+serializarlos como cadena es lo unico que lo garantiza de extremo a extremo.
+Hay una prueba que falla si algun monto se declara `number` en el contrato.
+
+**La empresa llega en la cabecera `X-Empresa-Id`, y eso todavia no es
+seguridad.** Es un marcador de posicion: §8.4 exige permisos y C-13 define los
+roles, pero son de la fase 8. Ver la advertencia en `api/dependencias.py`.
 
 ## Pruebas
 

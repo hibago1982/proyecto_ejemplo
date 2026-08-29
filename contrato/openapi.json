@@ -1,0 +1,1795 @@
+{
+  "components": {
+    "schemas": {
+      "BarraAging": {
+        "description": "Un bucket en el grafico de antiguedad.",
+        "properties": {
+          "bucket": {
+            "title": "Bucket",
+            "type": "string"
+          },
+          "color": {
+            "title": "Color",
+            "type": "string"
+          },
+          "etiqueta": {
+            "title": "Etiqueta",
+            "type": "string"
+          },
+          "facturas": {
+            "title": "Facturas",
+            "type": "integer"
+          },
+          "pct_sobre_total": {
+            "title": "Pct Sobre Total",
+            "type": "string"
+          },
+          "saldo": {
+            "title": "Saldo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bucket",
+          "etiqueta",
+          "color",
+          "saldo",
+          "facturas",
+          "pct_sobre_total"
+        ],
+        "title": "BarraAging",
+        "type": "object"
+      },
+      "BucketConfigurado": {
+        "properties": {
+          "accion": {
+            "title": "Accion",
+            "type": "string"
+          },
+          "activo": {
+            "title": "Activo",
+            "type": "boolean"
+          },
+          "alerta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alerta"
+          },
+          "codigo": {
+            "title": "Codigo",
+            "type": "string"
+          },
+          "color": {
+            "title": "Color",
+            "type": "string"
+          },
+          "desde": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Desde"
+          },
+          "etiqueta": {
+            "title": "Etiqueta",
+            "type": "string"
+          },
+          "hasta": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hasta"
+          },
+          "orden": {
+            "title": "Orden",
+            "type": "integer"
+          },
+          "prioridad_base": {
+            "title": "Prioridad Base",
+            "type": "integer"
+          },
+          "prioridad_etiqueta": {
+            "title": "Prioridad Etiqueta",
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo",
+          "etiqueta",
+          "desde",
+          "hasta",
+          "color",
+          "prioridad_base",
+          "prioridad_etiqueta",
+          "accion",
+          "alerta",
+          "orden",
+          "activo"
+        ],
+        "title": "BucketConfigurado",
+        "type": "object"
+      },
+      "CambioParametro": {
+        "description": "Peticion para fijar un umbral.\n\nEs el camino por el que R01 y R02 se activan: sin despliegue, con rastro.",
+        "properties": {
+          "usuario_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Usuario Id",
+            "type": "string"
+          },
+          "valor": {
+            "description": "Valor nuevo. Se guarda como texto y la regla lo interpreta.",
+            "title": "Valor",
+            "type": "string"
+          }
+        },
+        "required": [
+          "valor",
+          "usuario_id"
+        ],
+        "title": "CambioParametro",
+        "type": "object"
+      },
+      "ClienteEnRanking": {
+        "properties": {
+          "cartera_total": {
+            "title": "Cartera Total",
+            "type": "string"
+          },
+          "cliente_nit": {
+            "title": "Cliente Nit",
+            "type": "string"
+          },
+          "cliente_nombre": {
+            "title": "Cliente Nombre",
+            "type": "string"
+          },
+          "dias_max": {
+            "title": "Dias Max",
+            "type": "integer"
+          },
+          "marcadores": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Marcadores",
+            "type": "array"
+          },
+          "n_vencidas": {
+            "title": "N Vencidas",
+            "type": "integer"
+          },
+          "pct_90": {
+            "title": "Pct 90",
+            "type": "string"
+          },
+          "pct_vencida": {
+            "title": "Pct Vencida",
+            "type": "string"
+          },
+          "prioridad": {
+            "title": "Prioridad",
+            "type": "integer"
+          },
+          "prioridad_etiqueta": {
+            "title": "Prioridad Etiqueta",
+            "type": "string"
+          },
+          "vencida": {
+            "title": "Vencida",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cliente_nit",
+          "cliente_nombre",
+          "cartera_total",
+          "vencida",
+          "pct_vencida",
+          "pct_90",
+          "dias_max",
+          "n_vencidas",
+          "prioridad",
+          "prioridad_etiqueta"
+        ],
+        "title": "ClienteEnRanking",
+        "type": "object"
+      },
+      "Configuracion": {
+        "properties": {
+          "buckets": {
+            "items": {
+              "$ref": "#/components/schemas/BucketConfigurado"
+            },
+            "title": "Buckets",
+            "type": "array"
+          },
+          "empresa_id": {
+            "title": "Empresa Id",
+            "type": "string"
+          },
+          "reglas": {
+            "items": {
+              "$ref": "#/components/schemas/ReglaConfigurada"
+            },
+            "title": "Reglas",
+            "type": "array"
+          },
+          "version_parametros": {
+            "title": "Version Parametros",
+            "type": "string"
+          }
+        },
+        "required": [
+          "empresa_id",
+          "version_parametros",
+          "buckets",
+          "reglas"
+        ],
+        "title": "Configuracion",
+        "type": "object"
+      },
+      "Corte": {
+        "description": "Un corte disponible para consultar o reproducir.",
+        "properties": {
+          "cartera_total": {
+            "title": "Cartera Total",
+            "type": "string"
+          },
+          "corte": {
+            "format": "date",
+            "title": "Corte",
+            "type": "string"
+          },
+          "generado": {
+            "format": "date-time",
+            "title": "Generado",
+            "type": "string"
+          },
+          "n_clientes": {
+            "title": "N Clientes",
+            "type": "integer"
+          },
+          "version_parametros": {
+            "title": "Version Parametros",
+            "type": "string"
+          }
+        },
+        "required": [
+          "corte",
+          "generado",
+          "version_parametros",
+          "cartera_total",
+          "n_clientes"
+        ],
+        "title": "Corte",
+        "type": "object"
+      },
+      "DetalleCliente": {
+        "properties": {
+          "alertas": {
+            "items": {
+              "$ref": "#/components/schemas/FilaGestion"
+            },
+            "title": "Alertas",
+            "type": "array"
+          },
+          "cartera_total": {
+            "title": "Cartera Total",
+            "type": "string"
+          },
+          "cliente_nit": {
+            "title": "Cliente Nit",
+            "type": "string"
+          },
+          "cliente_nombre": {
+            "title": "Cliente Nombre",
+            "type": "string"
+          },
+          "corte": {
+            "format": "date",
+            "title": "Corte",
+            "type": "string"
+          },
+          "dias_max": {
+            "title": "Dias Max",
+            "type": "integer"
+          },
+          "marcadores": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Marcadores",
+            "type": "array"
+          },
+          "mayor_150": {
+            "title": "Mayor 150",
+            "type": "string"
+          },
+          "mayor_90": {
+            "title": "Mayor 90",
+            "type": "string"
+          },
+          "n_facturas": {
+            "title": "N Facturas",
+            "type": "integer"
+          },
+          "n_vencidas": {
+            "title": "N Vencidas",
+            "type": "integer"
+          },
+          "pct_90": {
+            "title": "Pct 90",
+            "type": "string"
+          },
+          "pct_vencida": {
+            "title": "Pct Vencida",
+            "type": "string"
+          },
+          "por_vencer": {
+            "title": "Por Vencer",
+            "type": "string"
+          },
+          "prioridad": {
+            "title": "Prioridad",
+            "type": "integer"
+          },
+          "prioridad_etiqueta": {
+            "title": "Prioridad Etiqueta",
+            "type": "string"
+          },
+          "vence_hoy": {
+            "title": "Vence Hoy",
+            "type": "string"
+          },
+          "vencida": {
+            "title": "Vencida",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cliente_nit",
+          "cliente_nombre",
+          "corte",
+          "cartera_total",
+          "por_vencer",
+          "vence_hoy",
+          "vencida",
+          "pct_vencida",
+          "mayor_90",
+          "pct_90",
+          "mayor_150",
+          "dias_max",
+          "n_facturas",
+          "n_vencidas",
+          "prioridad",
+          "prioridad_etiqueta",
+          "marcadores",
+          "alertas"
+        ],
+        "title": "DetalleCliente",
+        "type": "object"
+      },
+      "Ejecucion": {
+        "properties": {
+          "alertas_cerradas": {
+            "title": "Alertas Cerradas",
+            "type": "integer"
+          },
+          "alertas_generadas": {
+            "title": "Alertas Generadas",
+            "type": "integer"
+          },
+          "corte": {
+            "format": "date",
+            "title": "Corte",
+            "type": "string"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "filas_procesadas": {
+            "title": "Filas Procesadas",
+            "type": "integer"
+          },
+          "fin": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fin"
+          },
+          "inicio": {
+            "format": "date-time",
+            "title": "Inicio",
+            "type": "string"
+          },
+          "mensaje": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mensaje"
+          }
+        },
+        "required": [
+          "corte",
+          "inicio",
+          "fin",
+          "filas_procesadas",
+          "alertas_generadas",
+          "alertas_cerradas",
+          "estado",
+          "mensaje"
+        ],
+        "title": "Ejecucion",
+        "type": "object"
+      },
+      "EntradaAuditoria": {
+        "properties": {
+          "campo": {
+            "title": "Campo",
+            "type": "string"
+          },
+          "entidad": {
+            "title": "Entidad",
+            "type": "string"
+          },
+          "fecha_hora": {
+            "format": "date-time",
+            "title": "Fecha Hora",
+            "type": "string"
+          },
+          "usuario_id": {
+            "title": "Usuario Id",
+            "type": "string"
+          },
+          "valor_anterior": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Anterior"
+          },
+          "valor_nuevo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Nuevo"
+          }
+        },
+        "required": [
+          "fecha_hora",
+          "usuario_id",
+          "entidad",
+          "campo",
+          "valor_anterior",
+          "valor_nuevo"
+        ],
+        "title": "EntradaAuditoria",
+        "type": "object"
+      },
+      "FilaGestion": {
+        "description": "Una linea de la bandeja de trabajo.",
+        "properties": {
+          "accion": {
+            "title": "Accion",
+            "type": "string"
+          },
+          "bucket": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bucket"
+          },
+          "cliente_nit": {
+            "title": "Cliente Nit",
+            "type": "string"
+          },
+          "codigo": {
+            "title": "Codigo",
+            "type": "string"
+          },
+          "credito_aplicado": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credito Aplicado"
+          },
+          "dias": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dias"
+          },
+          "estado": {
+            "title": "Estado",
+            "type": "string"
+          },
+          "etiqueta": {
+            "title": "Etiqueta",
+            "type": "string"
+          },
+          "explicacion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explicacion"
+          },
+          "factura": {
+            "title": "Factura",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "prioridad": {
+            "title": "Prioridad",
+            "type": "integer"
+          },
+          "prioridad_etiqueta": {
+            "title": "Prioridad Etiqueta",
+            "type": "string"
+          },
+          "saldo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saldo"
+          },
+          "saldo_bruto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saldo Bruto"
+          },
+          "vendedor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendedor"
+          },
+          "zona": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zona"
+          }
+        },
+        "required": [
+          "id",
+          "cliente_nit",
+          "factura",
+          "codigo",
+          "etiqueta",
+          "bucket",
+          "dias",
+          "saldo",
+          "saldo_bruto",
+          "credito_aplicado",
+          "prioridad",
+          "prioridad_etiqueta",
+          "accion",
+          "estado",
+          "explicacion"
+        ],
+        "title": "FilaGestion",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "ListaGestion": {
+        "properties": {
+          "corte": {
+            "format": "date",
+            "title": "Corte",
+            "type": "string"
+          },
+          "filas": {
+            "items": {
+              "$ref": "#/components/schemas/FilaGestion"
+            },
+            "title": "Filas",
+            "type": "array"
+          },
+          "pagina": {
+            "title": "Pagina",
+            "type": "integer"
+          },
+          "por_pagina": {
+            "title": "Por Pagina",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "corte",
+          "total",
+          "pagina",
+          "por_pagina",
+          "filas"
+        ],
+        "title": "ListaGestion",
+        "type": "object"
+      },
+      "Panel": {
+        "description": "Respuesta del panel: todo lo que §8.1 pide, en una sola llamada.",
+        "properties": {
+          "aging": {
+            "items": {
+              "$ref": "#/components/schemas/BarraAging"
+            },
+            "title": "Aging",
+            "type": "array"
+          },
+          "corte": {
+            "format": "date",
+            "title": "Corte",
+            "type": "string"
+          },
+          "empresa_id": {
+            "title": "Empresa Id",
+            "type": "string"
+          },
+          "generado": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generado"
+          },
+          "kpis": {
+            "items": {
+              "$ref": "#/components/schemas/TarjetaKPI"
+            },
+            "title": "Kpis",
+            "type": "array"
+          },
+          "n_clientes": {
+            "title": "N Clientes",
+            "type": "integer"
+          },
+          "n_facturas": {
+            "title": "N Facturas",
+            "type": "integer"
+          },
+          "ranking": {
+            "items": {
+              "$ref": "#/components/schemas/ClienteEnRanking"
+            },
+            "title": "Ranking",
+            "type": "array"
+          },
+          "reglas_inactivas": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Reglas Inactivas",
+            "type": "object"
+          },
+          "version_parametros": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Parametros"
+          }
+        },
+        "required": [
+          "empresa_id",
+          "corte",
+          "kpis",
+          "aging",
+          "ranking",
+          "n_clientes",
+          "n_facturas"
+        ],
+        "title": "Panel",
+        "type": "object"
+      },
+      "PeticionEjecucion": {
+        "properties": {
+          "corte": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Corte a procesar. Si se omite, se usa la fecha de hoy en America/Bogota, que es la zona de referencia del motor (C-11).",
+            "title": "Corte"
+          }
+        },
+        "title": "PeticionEjecucion",
+        "type": "object"
+      },
+      "ReglaConfigurada": {
+        "properties": {
+          "accion": {
+            "title": "Accion",
+            "type": "string"
+          },
+          "activa": {
+            "title": "Activa",
+            "type": "boolean"
+          },
+          "ambito": {
+            "title": "Ambito",
+            "type": "string"
+          },
+          "codigo": {
+            "title": "Codigo",
+            "type": "string"
+          },
+          "etiqueta": {
+            "title": "Etiqueta",
+            "type": "string"
+          },
+          "faltantes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Faltantes",
+            "type": "array"
+          },
+          "motivo_inactiva": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo Inactiva"
+          },
+          "parametros": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Parametros",
+            "type": "object"
+          },
+          "parametros_requeridos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Parametros Requeridos",
+            "type": "array"
+          },
+          "prioridad": {
+            "title": "Prioridad",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "codigo",
+          "etiqueta",
+          "ambito",
+          "parametros_requeridos",
+          "parametros",
+          "faltantes",
+          "activa",
+          "motivo_inactiva",
+          "prioridad",
+          "accion"
+        ],
+        "title": "ReglaConfigurada",
+        "type": "object"
+      },
+      "ResultadoEjecucion": {
+        "properties": {
+          "alertas_actualizadas": {
+            "title": "Alertas Actualizadas",
+            "type": "integer"
+          },
+          "alertas_cerradas": {
+            "title": "Alertas Cerradas",
+            "type": "integer"
+          },
+          "alertas_insertadas": {
+            "title": "Alertas Insertadas",
+            "type": "integer"
+          },
+          "clientes": {
+            "title": "Clientes",
+            "type": "integer"
+          },
+          "corte": {
+            "format": "date",
+            "title": "Corte",
+            "type": "string"
+          },
+          "empresa_id": {
+            "title": "Empresa Id",
+            "type": "string"
+          },
+          "filas_leidas": {
+            "title": "Filas Leidas",
+            "type": "integer"
+          },
+          "reglas_inactivas": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Reglas Inactivas",
+            "type": "object"
+          },
+          "version_parametros": {
+            "title": "Version Parametros",
+            "type": "string"
+          }
+        },
+        "required": [
+          "empresa_id",
+          "corte",
+          "filas_leidas",
+          "alertas_insertadas",
+          "alertas_actualizadas",
+          "alertas_cerradas",
+          "clientes",
+          "version_parametros",
+          "reglas_inactivas"
+        ],
+        "title": "ResultadoEjecucion",
+        "type": "object"
+      },
+      "TarjetaKPI": {
+        "description": "Cifra del encabezado con su peso sobre el total.\n\nEl porcentaje viaja calculado desde el servidor: si lo calculara el\nfrontend seria una segunda implementacion del indicador, que es justo lo\nque §16 prohibe.",
+        "properties": {
+          "codigo": {
+            "title": "Codigo",
+            "type": "string"
+          },
+          "etiqueta": {
+            "title": "Etiqueta",
+            "type": "string"
+          },
+          "pct_sobre_total": {
+            "title": "Pct Sobre Total",
+            "type": "string"
+          },
+          "valor": {
+            "title": "Valor",
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo",
+          "etiqueta",
+          "valor",
+          "pct_sobre_total"
+        ],
+        "title": "TarjetaKPI",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "\nMotor de alertas de cartera de BUSINT.\n\nConvierte el aging de cuentas por cobrar en una lista de trabajo priorizada.\nToda alerta lleva la explicacion de por que se disparo: la regla, el parametro\nvigente y el valor que la disparo.\n\n**Los montos viajan como cadena**, no como numero, para conservar los dos\ndecimales sin el error de redondeo de los flotantes de JavaScript.\n",
+    "title": "BUSINT - Motor de alertas de cartera",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/clientes/{cliente_nit}": {
+      "get": {
+        "operationId": "detalle_api_v1_clientes__cliente_nit__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cliente_nit",
+            "required": true,
+            "schema": {
+              "title": "Cliente Nit",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "corte",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Corte"
+            }
+          },
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetalleCliente"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detalle del cliente",
+        "tags": [
+          "gestion"
+        ]
+      }
+    },
+    "/api/v1/configuracion": {
+      "get": {
+        "operationId": "obtener_api_v1_configuracion_get",
+        "parameters": [
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Configuracion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reglas y buckets vigentes",
+        "tags": [
+          "configuracion"
+        ]
+      }
+    },
+    "/api/v1/configuracion/auditoria": {
+      "get": {
+        "operationId": "historial_api_v1_configuracion_auditoria_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limite",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limite",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EntradaAuditoria"
+                  },
+                  "title": "Response Historial Api V1 Configuracion Auditoria Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Historial de cambios de configuracion",
+        "tags": [
+          "configuracion"
+        ]
+      }
+    },
+    "/api/v1/configuracion/reglas/{codigo}/parametros/{nombre}": {
+      "put": {
+        "operationId": "fijar_api_v1_configuracion_reglas__codigo__parametros__nombre__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "codigo",
+            "required": true,
+            "schema": {
+              "title": "Codigo",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "nombre",
+            "required": true,
+            "schema": {
+              "title": "Nombre",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioParametro"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Configuracion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fijar el valor de un parametro",
+        "tags": [
+          "configuracion"
+        ]
+      }
+    },
+    "/api/v1/cortes": {
+      "get": {
+        "operationId": "listar_cortes_api_v1_cortes_get",
+        "parameters": [
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Corte"
+                  },
+                  "title": "Response Listar Cortes Api V1 Cortes Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cortes disponibles",
+        "tags": [
+          "panel"
+        ]
+      }
+    },
+    "/api/v1/ejecucion": {
+      "get": {
+        "operationId": "bitacora_api_v1_ejecucion_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limite",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limite",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Ejecucion"
+                  },
+                  "title": "Response Bitacora Api V1 Ejecucion Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Bitacora de corridas",
+        "tags": [
+          "ejecucion"
+        ]
+      },
+      "post": {
+        "operationId": "ejecutar_api_v1_ejecucion_post",
+        "parameters": [
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeticionEjecucion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoEjecucion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ejecutar el motor para un corte",
+        "tags": [
+          "ejecucion"
+        ]
+      }
+    },
+    "/api/v1/gestion": {
+      "get": {
+        "operationId": "lista_api_v1_gestion_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "prioridad_minima",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 4,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Prioridad Minima"
+            }
+          },
+          {
+            "in": "query",
+            "name": "bucket",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bucket"
+            }
+          },
+          {
+            "in": "query",
+            "name": "vendedor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Vendedor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "zona",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Zona"
+            }
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "activa",
+              "title": "Estado"
+            }
+          },
+          {
+            "description": "NIT o numero de factura",
+            "in": "query",
+            "name": "busqueda",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "NIT o numero de factura",
+              "title": "Busqueda"
+            }
+          },
+          {
+            "in": "query",
+            "name": "orden",
+            "required": false,
+            "schema": {
+              "default": "prioridad",
+              "pattern": "^(prioridad|dias|saldo|cliente)$",
+              "title": "Orden",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pagina",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Pagina",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "por_pagina",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Por Pagina",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "corte",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Corte"
+            }
+          },
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaGestion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Lista de gestion",
+        "tags": [
+          "gestion"
+        ]
+      }
+    },
+    "/api/v1/panel": {
+      "get": {
+        "operationId": "panel_api_v1_panel_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "corte",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Corte"
+            }
+          },
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Panel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Panel de control",
+        "tags": [
+          "panel"
+        ]
+      }
+    },
+    "/api/v1/panel/criticos": {
+      "get": {
+        "operationId": "criticos_api_v1_panel_criticos_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limite",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limite",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "corte",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Corte"
+            }
+          },
+          {
+            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+            "in": "header",
+            "name": "x-empresa-id",
+            "required": true,
+            "schema": {
+              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
+              "title": "X-Empresa-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ClienteEnRanking"
+                  },
+                  "title": "Response Criticos Api V1 Panel Criticos Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clientes que requieren atencion",
+        "tags": [
+          "panel"
+        ]
+      }
+    },
+    "/salud": {
+      "get": {
+        "operationId": "salud_salud_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Salud Salud Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Sonda de salud",
+        "tags": [
+          "panel"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "description": "Panel de control (§8.1)",
+      "name": "panel"
+    },
+    {
+      "description": "Lista de gestion y detalle de cliente (§8.2, §8.3)",
+      "name": "gestion"
+    },
+    {
+      "description": "Reglas, umbrales y auditoria (§8.4, §10.3)",
+      "name": "configuracion"
+    },
+    {
+      "description": "Corridas del motor (§10.2)",
+      "name": "ejecucion"
+    }
+  ]
+}
