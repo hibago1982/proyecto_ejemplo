@@ -257,14 +257,25 @@ ve en pantalla. Un fallo en una empresa no detiene a las demás, y queda en
 
 ## Banco de pruebas
 
-`banco_pruebas/index.html` es una página interactiva para explorar el motor: se
-mueve la fecha de corte, se cambia la configuración de umbrales y se ve qué
-dispara cada factura y por qué.
+Dos formas de probar el motor sin levantar el sistema entero. Dan el mismo
+resultado, y hay una prueba que lo verifica.
 
-No reimplementa las reglas. `herramientas/generar_banco_pruebas.py` corre el
-motor real sobre 96 escenarios y la página muestra su salida; una copia de las
-reglas en JavaScript contradiría §16 y podría enseñar un comportamiento que el
-sistema no tiene.
+**Sin instalar nada** — `banco_pruebas/index.html`: cartera editable, fecha de
+corte libre, umbrales a mano. Lleva dentro un port de las reglas a JavaScript,
+porque la política de seguridad de una página publicada impide ejecutar Python
+en ella. `tests/test_paridad_js.py` evalúa 96 escenarios con los dos motores y
+compara alerta por alerta; si divergen, la suite falla.
+
+**Sobre el motor Python real** — `herramientas/streamlit_motor.py`:
+
+```bash
+pip install -e ".[dev]" streamlit
+streamlit run herramientas/streamlit_motor.py
+```
+
+Importa `busint_alertas.motores.cartera` directamente, así que es la versión a
+la que hay que creerle si las dos discrepan. Detalles en
+`banco_pruebas/README.md`.
 
 ## Probarlo entero
 

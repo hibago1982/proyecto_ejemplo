@@ -1,39 +1,56 @@
 # Banco de pruebas del motor
 
-Pagina interactiva para explorar como clasifica el motor: se mueve la fecha de
-corte, se cambia la configuracion de umbrales y se ve que alerta dispara cada
-factura y por que.
+Dos formas de probar el motor. **Dan el mismo resultado**, y hay una prueba que
+lo verifica automaticamente.
 
-## Por que no reimplementa las reglas
+## 1. `index.html` — pagina publicada, sin instalar nada
 
-La pagina **no calcula nada**. `generar_banco_pruebas.py` corre el motor real
-sobre 96 escenarios (3 configuraciones x 32 cortes) y vuelca su salida a
-`datos.json`; `index.html` es un visor de esos resultados.
+Cartera editable, fecha de corte libre y umbrales que se fijan a mano. Se abre y
+funciona.
 
-Reimplementar las reglas en JavaScript habria sido mas facil y mas flexible,
-pero duplicaria la logica de alerta, que es exactamente lo que §16 prohibe:
-*"no duplicar la logica de alerta en PDF, Excel y pantalla; debe existir una
-sola fuente de calculo"*. Y una copia que se desincronice ensena un
-comportamiento que el sistema no tiene, que es peor que no tener pagina.
+**Lleva dentro un port de las reglas a JavaScript**, y §16 exige una sola fuente
+de calculo. Existe por una restriccion concreta: la politica de seguridad de una
+pagina publicada permite cargar guiones desde el CDN pero bloquea las peticiones
+que Pyodide necesita para traerse su WASM, asi que no se puede ejecutar el
+Python real dentro de esa pagina.
 
-## Regenerar
+Lo que evita que esa copia mienta: `tests/test_paridad_js.py` genera 96
+escenarios, los evalua con los dos motores y compara alerta por alerta y cifra
+por cifra. Si divergen, la suite falla.
 
 ```bash
-python herramientas/generar_banco_pruebas.py   # datos.json desde el motor
-python herramientas/armar_banco_pruebas.py     # index.html con los datos dentro
+python herramientas/armar_banco_pruebas.py   # arma index.html
+python -m pytest tests/test_paridad_js.py    # verifica la paridad
 ```
 
-La cartera de prueba, los cortes y las configuraciones estan al principio de
-`generar_banco_pruebas.py`. Cambiarlos y volver a generar es la forma de probar
-otros casos.
+## 2. `herramientas/streamlit_motor.py` — el motor Python real
 
-## Que cubre
+```bash
+pip install -e ".[dev]" streamlit
+streamlit run herramientas/streamlit_motor.py
+```
 
-Las 13 facturas y el barrido de cortes hacen disparar el catalogo completo:
-A01 a A12 y los marcadores M04 y M05. Incluye ademas dos casos que no generan
-alerta y conviene ver:
+Importa `busint_alertas.motores.cartera` directamente. No hay copia de las
+reglas, asi que **es la version a la que hay que creerle** si las dos discrepan
+alguna vez.
 
-- **F-109** trae una nota credito sin aplicar, que se netea contra la factura
-  mas antigua del cliente (C-10). La tabla muestra el desglose.
+## La cartera de ejemplo
+
+13 facturas de 2 clientes. Moviendo la fecha de corte dispara el catalogo
+completo A01–A12 y los marcadores M04 y M05. Incluye dos casos que no generan
+alerta y conviene ver funcionando:
+
+- **F-109** trae una nota credito sin aplicar. Se netea contra la factura mas
+  antigua del cliente, que es **F-108**, no contra la suya (C-10). La columna
+  de rango muestra el desglose.
 - **F-110** tiene saldo negativo: es credito a favor y nunca se clasifica como
   mora (§5.3, caso T09).
+
+## Que es cada archivo
+
+| Archivo | Que es |
+|---------|--------|
+| `motor.js` | Port de las reglas a JavaScript, verificado contra el Python |
+| `cartera_ejemplo.js` | La cartera de arranque y los umbrales iniciales |
+| `plantilla.html` | La pagina, con `__MOTOR__` y `__CARTERA__` por rellenar |
+| `index.html` | Generado. No se edita a mano |

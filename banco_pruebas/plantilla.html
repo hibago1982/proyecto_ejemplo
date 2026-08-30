@@ -3,205 +3,146 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <style>
   /* Paleta del propio producto: la escala de severidad es la de §5.2 de la
-     especificacion y los grises llevan sesgo hacia el azul del acento. */
+     Especificacion Funcional y los grises llevan sesgo hacia el azul del acento. */
   :root {
     --acento: #2F6B9A;
-    --fondo: #F2F5F8;
-    --superficie: #FFFFFF;
-    --superficie-2: #F8FAFB;
-    --filete: #DFE6EC;
-    --tinta: #131920;
-    --apagado: #566673;
-    --tenue: #8E9CA9;
-    --p0: #2F6B9A;
-    --p1: #B8860B;
-    --p2: #E67E22;
-    --p3: #9B1C1C;
-    --p4: #641220;
-    --sombra: 0 1px 2px rgba(19, 25, 32, .04);
+    --fondo: #F2F5F8; --superficie: #FFFFFF; --superficie-2: #F8FAFB;
+    --filete: #DFE6EC; --tinta: #131920; --apagado: #566673; --tenue: #8E9CA9;
+    --p0: #2F6B9A; --p1: #B8860B; --p2: #E67E22; --p3: #9B1C1C; --p4: #641220;
+    --alerta-fondo: #FDF6E7; --alerta-borde: #E8D5A0;
+    --sombra: 0 1px 2px rgba(19,25,32,.05);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --acento: #6FA8D6;
-      --fondo: #0D1218;
-      --superficie: #151C24;
-      --superficie-2: #1A222B;
-      --filete: #263039;
-      --tinta: #E2E9F0;
-      --apagado: #94A3B1;
-      --tenue: #64717E;
-      --p0: #7FB3DC;
-      --p1: #D9A429;
-      --p2: #F09449;
-      --p3: #D65252;
-      --p4: #B04048;
-      --sombra: 0 1px 2px rgba(0, 0, 0, .3);
+      --fondo: #0D1218; --superficie: #151C24; --superficie-2: #1A222B;
+      --filete: #263039; --tinta: #E2E9F0; --apagado: #94A3B1; --tenue: #64717E;
+      --p0: #7FB3DC; --p1: #D9A429; --p2: #F09449; --p3: #D65252; --p4: #B04048;
+      --alerta-fondo: #241E10; --alerta-borde: #4A3D1C;
+      --sombra: 0 1px 2px rgba(0,0,0,.3);
     }
   }
   :root[data-theme="dark"] {
     --acento: #6FA8D6;
-    --fondo: #0D1218;
-    --superficie: #151C24;
-    --superficie-2: #1A222B;
-    --filete: #263039;
-    --tinta: #E2E9F0;
-    --apagado: #94A3B1;
-    --tenue: #64717E;
-    --p0: #7FB3DC;
-    --p1: #D9A429;
-    --p2: #F09449;
-    --p3: #D65252;
-    --p4: #B04048;
-    --sombra: 0 1px 2px rgba(0, 0, 0, .3);
+    --fondo: #0D1218; --superficie: #151C24; --superficie-2: #1A222B;
+    --filete: #263039; --tinta: #E2E9F0; --apagado: #94A3B1; --tenue: #64717E;
+    --p0: #7FB3DC; --p1: #D9A429; --p2: #F09449; --p3: #D65252; --p4: #B04048;
+    --alerta-fondo: #241E10; --alerta-borde: #4A3D1C;
+    --sombra: 0 1px 2px rgba(0,0,0,.3);
   }
 
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--fondo);
-    color: var(--tinta);
+    margin: 0; background: var(--fondo); color: var(--tinta);
     font: 400 14px/1.5 "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  .mono, .num {
+  .mono, .num, input, select {
     font-family: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
     font-variant-numeric: tabular-nums;
   }
   :focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: 4px; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  .marco { max-width: 1340px; margin: 0 auto; padding: 22px 20px 56px; }
 
-  .marco { max-width: 1320px; margin: 0 auto; padding: 24px 20px 56px; }
-
-  /* --- Cabecera --- */
   header.top { border-bottom: 1px solid var(--filete); background: var(--superficie); }
   header.top .marco { padding-block: 18px 16px; }
-  .marca {
-    font: 600 11px/1 "IBM Plex Mono", monospace;
-    letter-spacing: .18em; color: var(--acento); text-transform: uppercase;
-  }
+  .marca { font: 600 11px/1 "IBM Plex Mono", monospace; letter-spacing: .18em; color: var(--acento); text-transform: uppercase; }
   h1 { font-size: 26px; font-weight: 600; letter-spacing: -.02em; margin: 8px 0 4px; text-wrap: balance; }
-  .lead { color: var(--apagado); max-width: 68ch; margin: 0; font-size: 14px; }
-  .aviso {
-    margin-top: 14px; padding: 10px 12px; border-radius: 10px;
-    border: 1px solid var(--filete); background: var(--superficie-2);
-    color: var(--apagado); font-size: 12.5px; max-width: 78ch;
+  .lead { color: var(--apagado); max-width: 70ch; margin: 0; }
+  .nota {
+    margin-top: 14px; padding: 10px 12px; border-radius: 10px; max-width: 82ch;
+    border: 1px solid var(--alerta-borde); background: var(--alerta-fondo);
+    color: var(--apagado); font-size: 12.5px; line-height: 1.55;
   }
-  .aviso b { color: var(--tinta); font-weight: 600; }
+  .nota b { color: var(--tinta); font-weight: 600; }
+  .nota code { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; }
 
-  /* --- Consola de control --- */
-  .consola {
-    background: var(--superficie); border: 1px solid var(--filete);
-    border-radius: 14px; padding: 16px; box-shadow: var(--sombra);
-    display: grid; gap: 16px; margin-bottom: 14px;
-  }
-  .etiqueta {
-    font: 600 10.5px/1 "IBM Plex Mono", monospace; letter-spacing: .12em;
-    text-transform: uppercase; color: var(--tenue);
-  }
-  .fila-corte { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .fecha-corte { font: 600 22px/1 "IBM Plex Mono", monospace; letter-spacing: -.01em; }
-  .pista { color: var(--tenue); font-size: 12.5px; }
-  input[type="range"] {
-    width: 100%; margin: 10px 0 0; accent-color: var(--acento); height: 22px;
-  }
-  .escala {
-    display: flex; justify-content: space-between;
-    font: 400 10.5px/1 "IBM Plex Mono", monospace; color: var(--tenue); margin-top: 2px;
-  }
-  .presets { display: flex; gap: 8px; flex-wrap: wrap; }
-  .preset {
-    flex: 1 1 200px; text-align: left; cursor: pointer;
-    border: 1px solid var(--filete); background: var(--superficie-2);
-    border-radius: 10px; padding: 9px 11px; color: var(--tinta);
-    font-family: inherit; font-size: 13px; transition: border-color .15s, background .15s;
-  }
-  .preset:hover { border-color: var(--apagado); }
-  .preset[aria-pressed="true"] {
-    border-color: var(--acento); background: color-mix(in srgb, var(--acento) 9%, transparent);
-  }
-  .preset strong { display: block; font-weight: 600; }
-  .preset span { display: block; color: var(--apagado); font-size: 11.5px; margin-top: 2px; }
-
-  /* --- Indicadores --- */
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
-  .kpi {
-    background: var(--superficie); border: 1px solid var(--filete);
-    border-radius: 12px; padding: 12px 13px; box-shadow: var(--sombra);
-  }
-  .kpi .v { font: 600 19px/1.15 "IBM Plex Mono", monospace; margin-top: 5px; letter-spacing: -.02em; }
-  .kpi .p { color: var(--tenue); font-size: 11.5px; margin-top: 3px; }
-
-  /* --- Barra de antiguedad --- */
-  .aging { background: var(--superficie); border: 1px solid var(--filete); border-radius: 12px; padding: 14px; box-shadow: var(--sombra); margin-bottom: 14px; }
-  .barra { display: flex; height: 30px; border-radius: 7px; overflow: hidden; margin-top: 10px; background: var(--superficie-2); }
-  .seg { transition: flex-grow .28s ease; min-width: 0; }
-  .leyenda { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 10px; font-size: 11.5px; color: var(--apagado); }
-  .leyenda i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 5px; }
-
-  /* --- Dos columnas --- */
-  .cols { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 14px; align-items: start; }
-  @media (max-width: 940px) { .cols { grid-template-columns: 1fr; } }
   .panel { background: var(--superficie); border: 1px solid var(--filete); border-radius: 12px; box-shadow: var(--sombra); overflow: hidden; }
   .panel > h2 {
-    margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--filete);
-    font: 600 10.5px/1 "IBM Plex Mono", monospace; letter-spacing: .12em;
+    margin: 0; padding: 11px 14px; border-bottom: 1px solid var(--filete);
+    font: 600 10.5px/1.4 "IBM Plex Mono", monospace; letter-spacing: .12em;
     text-transform: uppercase; color: var(--tenue);
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
   }
-  .panel .cuerpo { padding: 4px 0; }
+  .cuenta { font-weight: 400; letter-spacing: 0; color: var(--tenue); }
+  .lista { max-height: 520px; overflow-y: auto; }
   .desplaza { overflow-x: auto; }
+  .etiqueta { font: 600 10.5px/1.4 "IBM Plex Mono", monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); }
 
-  /* --- Libro de facturas --- */
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th {
-    text-align: left; font: 600 10px/1 "IBM Plex Mono", monospace;
-    letter-spacing: .1em; text-transform: uppercase; color: var(--tenue);
-    padding: 8px 10px; border-bottom: 1px solid var(--filete); white-space: nowrap;
+  input, select {
+    background: var(--superficie); color: var(--tinta);
+    border: 1px solid var(--filete); border-radius: 7px;
+    padding: 5px 7px; font-size: 12.5px; width: 100%;
   }
-  td { padding: 8px 10px; border-bottom: 1px solid color-mix(in srgb, var(--filete) 55%, transparent); }
+  input:hover, select:hover { border-color: var(--apagado); }
+  input.malo { border-color: var(--p3); }
+  label.campo { display: block; font-size: 11.5px; color: var(--apagado); }
+  label.campo span { display: block; margin-bottom: 3px; }
+  .pista { font-size: 11px; color: var(--tenue); margin-top: 3px; }
+  button {
+    font-family: inherit; font-size: 12.5px; cursor: pointer;
+    border: 1px solid var(--filete); background: var(--superficie);
+    color: var(--tinta); border-radius: 7px; padding: 5px 10px;
+    transition: border-color .15s, background .15s;
+  }
+  button:hover { border-color: var(--apagado); }
+  button.primario { background: var(--acento); border-color: var(--acento); color: #fff; }
+  button.primario:hover { filter: brightness(1.08); }
+  button.quitar { border: 0; background: transparent; color: var(--tenue); padding: 2px 6px; font-size: 15px; line-height: 1; }
+  button.quitar:hover { color: var(--p3); }
+
+  .barra-sup { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
+  .barra-sup .grupo { display: flex; flex-direction: column; gap: 4px; }
+  .barra-sup .grupo input { width: 168px; font-size: 14px; padding: 7px 9px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .kpi { background: var(--superficie); border: 1px solid var(--filete); border-radius: 12px; padding: 11px 13px; box-shadow: var(--sombra); }
+  .kpi .v { font: 600 18px/1.2 "IBM Plex Mono", monospace; margin-top: 4px; letter-spacing: -.02em; }
+  .kpi .p { color: var(--tenue); font-size: 11px; margin-top: 2px; }
+
+  .aging { background: var(--superficie); border: 1px solid var(--filete); border-radius: 12px; padding: 13px; box-shadow: var(--sombra); margin-bottom: 14px; }
+  .franja { display: flex; height: 28px; border-radius: 7px; overflow: hidden; margin-top: 9px; background: var(--superficie-2); }
+  .seg { transition: flex-grow .25s ease; }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 3px 15px; margin-top: 9px; font-size: 11.5px; color: var(--apagado); }
+  .leyenda i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 5px; }
+
+  .cols { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+  @media (max-width: 980px) { .cols { grid-template-columns: 1fr; } }
+  .apilado { display: grid; gap: 14px; }
+
+  /* Ancho minimo para que la columna de rango no se parta en tres lineas.
+     El contenedor ya desplaza en horizontal cuando no cabe. */
+  table { width: 100%; min-width: 780px; border-collapse: collapse; font-size: 12.5px; }
+  td.rango { white-space: nowrap; }
+  td.rango .desglose { font-size: 10.5px; color: var(--tenue); white-space: nowrap; }
+  th { text-align: left; font: 600 10px/1.4 "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--tenue); padding: 7px 8px; border-bottom: 1px solid var(--filete); white-space: nowrap; }
+  td { padding: 5px 8px; border-bottom: 1px solid color-mix(in srgb, var(--filete) 55%, transparent); }
   tr:last-child td { border-bottom: 0; }
-  tbody tr { cursor: pointer; transition: background .15s; }
-  tbody tr:hover { background: var(--superficie-2); }
-  tbody tr[aria-selected="true"] { background: color-mix(in srgb, var(--acento) 8%, transparent); }
-  .d { text-align: right; white-space: nowrap; }
-  .rayita { display: inline-block; width: 3px; height: 15px; border-radius: 2px; vertical-align: -3px; margin-right: 7px; }
-  .chip {
-    display: inline-block; border: 1px solid; border-radius: 999px;
-    padding: 1px 7px; font: 600 10.5px/1.5 "IBM Plex Mono", monospace; white-space: nowrap;
-  }
-  .cod { display: inline-block; margin-right: 4px; }
+  .d { text-align: right; }
+  .rayita { display: inline-block; width: 3px; height: 14px; border-radius: 2px; vertical-align: -3px; margin-right: 6px; }
+  .chip { display: inline-block; border: 1px solid; border-radius: 999px; padding: 1px 7px; font: 600 10.5px/1.5 "IBM Plex Mono", monospace; white-space: nowrap; }
+  .cod { display: inline-block; margin-right: 3px; font-family: "IBM Plex Mono", monospace; font-size: 11px; }
   .apag { color: var(--tenue); }
 
-  /* --- Alertas --- */
-  .lista { max-height: 560px; overflow-y: auto; }
-  .lista::-webkit-scrollbar { width: 9px; }
-  .lista::-webkit-scrollbar-thumb {
-    background: var(--filete); border-radius: 5px;
-  }
-  .cuenta {
-    float: right; font: 400 10.5px/1 "IBM Plex Mono", monospace;
-    color: var(--tenue); letter-spacing: 0;
-  }
-  .alerta { padding: 10px 14px; border-bottom: 1px solid color-mix(in srgb, var(--filete) 55%, transparent); }
+  .alerta { padding: 9px 14px; border-bottom: 1px solid color-mix(in srgb, var(--filete) 55%, transparent); }
   .alerta:last-child { border-bottom: 0; }
-  .alerta.opaca { opacity: .3; }
-  .alerta .cab { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-  .alerta .por {
-    margin-top: 5px; font-size: 12px; color: var(--apagado);
-    font-family: "IBM Plex Mono", monospace; line-height: 1.45;
-  }
-  .alerta .acc { margin-top: 3px; font-size: 12px; color: var(--tenue); }
-  .vacio { padding: 22px 14px; text-align: center; color: var(--tenue); font-size: 13px; }
+  .alerta .cab { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+  .alerta .por { margin: 4px 0 0; font-size: 11.5px; color: var(--apagado); font-family: "IBM Plex Mono", monospace; line-height: 1.45; }
+  .alerta .acc { margin: 3px 0 0; font-size: 11.5px; color: var(--tenue); }
+  .vacio { padding: 20px 14px; text-align: center; color: var(--tenue); font-size: 12.5px; }
 
-  /* --- Catalogo de reglas --- */
-  .reglas { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; padding: 12px; }
-  .regla { border: 1px solid var(--filete); border-radius: 10px; padding: 10px 11px; background: var(--superficie-2); }
+  .umbrales { display: grid; gap: 10px; padding: 12px 14px; }
+  .umbral-off { color: var(--tenue); }
+  .reglas { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 9px; padding: 12px; }
+  .regla { border: 1px solid var(--filete); border-radius: 9px; padding: 9px 10px; background: var(--superficie-2); }
   .regla.off { opacity: .55; }
-  .regla .n { display: flex; align-items: baseline; gap: 7px; }
-  .regla .n b { font: 600 13px/1 "IBM Plex Mono", monospace; }
-  .regla .q { font-size: 12px; color: var(--apagado); margin-top: 5px; line-height: 1.45; }
+  .regla .n { display: flex; align-items: baseline; gap: 6px; }
+  .regla .n b { font: 600 12.5px/1 "IBM Plex Mono", monospace; }
+  .regla .q { font-size: 11.5px; color: var(--apagado); margin: 4px 0 0; line-height: 1.45; }
   .punto { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 
-  footer { margin-top: 22px; color: var(--tenue); font-size: 12px; line-height: 1.6; }
+  footer { margin-top: 20px; color: var(--tenue); font-size: 12px; line-height: 1.6; }
   footer code { font-family: "IBM Plex Mono", monospace; color: var(--apagado); }
 </style>
 
@@ -210,71 +151,97 @@
     <p class="marca">Busint · Motor de alertas de cartera</p>
     <h1>Banco de pruebas del motor</h1>
     <p class="lead">
-      Mueve la fecha de corte y cambia la configuración de umbrales para ver cómo
-      clasifica el motor. Cada factura recorre los ocho rangos de antigüedad, y
-      cada alerta dice por qué se disparó.
+      Edita las facturas, mueve la fecha de corte y fija los umbrales. El motor
+      reevalúa al instante y cada alerta explica qué regla la disparó, con qué
+      parámetro y contra qué valor.
     </p>
-    <p class="aviso">
-      <b>Estas cifras las calculó el motor real</b>, no una imitación en el
-      navegador. Se corrió <code class="mono">busint_alertas</code> sobre 96
-      escenarios y esta página muestra su salida. Reimplementar las reglas aquí
-      contradiría §16 —una sola fuente de cálculo— y podría enseñarte un
-      comportamiento que el sistema no tiene.
+    <p class="nota">
+      <b>Esto es una segunda implementación de las reglas</b>, y §16 exige una
+      sola fuente de cálculo. Existe porque la política de seguridad de esta
+      página impide ejecutar el Python real en tu navegador. Lo que evita que
+      mienta: <code>tests/test_paridad_js.py</code> evalúa 96 escenarios con los
+      dos motores y compara alerta por alerta y cifra por cifra — si divergen,
+      la suite falla. En producción manda el motor Python.
     </p>
   </div>
 </header>
 
 <main class="marco">
-  <section class="consola">
-    <div>
-      <p class="etiqueta">Fecha de corte</p>
-      <div class="fila-corte">
-        <span class="fecha-corte" id="fecha">—</span>
-        <span class="pista" id="pista-corte"></span>
+  <div class="barra-sup">
+    <div class="grupo">
+      <span class="etiqueta">Fecha de corte</span>
+      <input type="date" id="corte" />
+    </div>
+    <div class="grupo">
+      <span class="etiqueta">Atajos</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" data-salto="-30">−30 d</button>
+        <button type="button" data-salto="-7">−7 d</button>
+        <button type="button" data-salto="7">+7 d</button>
+        <button type="button" data-salto="30">+30 d</button>
+        <button type="button" data-salto="90">+90 d</button>
       </div>
-      <input type="range" id="corte" min="0" max="0" value="0"
-             aria-label="Fecha de corte" />
-      <div class="escala"><span id="esc-ini"></span><span id="esc-fin"></span></div>
     </div>
-    <div>
-      <p class="etiqueta" style="margin-bottom:8px">Configuración de umbrales</p>
-      <div class="presets" id="presets" role="group" aria-label="Configuración"></div>
+    <div class="grupo" style="margin-left:auto">
+      <span class="etiqueta">Cartera</span>
+      <div style="display:flex;gap:6px">
+        <button type="button" id="restaurar">Restaurar ejemplo</button>
+        <button type="button" id="vaciar">Vaciar</button>
+      </div>
     </div>
-  </section>
+  </div>
 
   <section class="kpis" id="kpis" aria-label="Indicadores"></section>
 
   <section class="aging">
     <p class="etiqueta">Antigüedad de cartera</p>
-    <div class="barra" id="barra" role="img" aria-label="Distribución por rango"></div>
+    <div class="franja" id="franja" role="img" aria-label="Distribución por rango"></div>
     <div class="leyenda" id="leyenda"></div>
   </section>
 
   <div class="cols">
-    <section class="panel">
-      <h2>Facturas del corte · pulsa una para aislar sus alertas</h2>
-      <div class="desplaza">
-        <table>
-          <thead>
-            <tr>
-              <th>Factura</th><th>Cliente</th><th class="d">Días</th>
-              <th>Rango</th><th class="d">Saldo</th><th>Alertas</th>
-            </tr>
-          </thead>
-          <tbody id="libro"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <div style="display:grid;gap:14px">
+    <div class="apilado">
       <section class="panel">
-        <h2><span id="tit-alertas">Qué disparó</span><span class="cuenta" id="n-alertas"></span></h2>
+        <h2>
+          <span>Cartera · edítala y el motor recalcula</span>
+          <button type="button" id="agregar" class="primario">+ Factura</button>
+        </h2>
+        <div class="desplaza">
+          <table>
+            <thead>
+              <tr>
+                <th>Factura</th><th>Cliente</th><th>Vencimiento</th>
+                <th class="d">Saldo</th><th class="d">Nota crédito</th>
+                <th class="d">Días</th><th>Rango</th><th>Alertas</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="cartera"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Catálogo de reglas · §5.4 y §7</h2>
+        <div class="reglas" id="catalogo"></div>
+      </section>
+    </div>
+
+    <div class="apilado">
+      <section class="panel">
+        <h2>Umbrales · déjalos vacíos para desactivar la regla</h2>
+        <div class="umbrales" id="umbrales"></div>
+      </section>
+
+      <section class="panel">
+        <h2><span>Qué disparó</span><span class="cuenta" id="n-alertas"></span></h2>
         <div id="alertas" class="lista"></div>
       </section>
+
       <section class="panel">
         <h2>Riesgo por cliente</h2>
-        <div id="clientes" class="lista" style="max-height:320px"></div>
+        <div id="clientes" class="lista" style="max-height:340px"></div>
       </section>
+
       <section class="panel">
         <h2>Reglas sin evaluar</h2>
         <div id="inactivas"></div>
@@ -282,226 +249,257 @@
     </div>
   </div>
 
-  <section class="panel" style="margin-top:14px">
-    <h2>Catálogo de reglas · §5.4 y §7</h2>
-    <div class="reglas" id="catalogo"></div>
-  </section>
-
   <footer>
     <p>
-      Cartera de prueba: 13 facturas de 2 clientes, con vencimientos fijos entre
-      febrero y septiembre de 2026. Incluye una factura con nota crédito sin
-      aplicar (C-10) y una con saldo negativo, que nunca se clasifica como mora
-      (§5.3, caso T09).
+      Los rangos, colores y prioridades salen de §5.2 de la Especificación
+      Funcional. Una regla sin umbral asignado no se evalúa: el motor no inventa
+      valores por defecto (C-05), y §16 prohíbe deducirlos de una base de
+      demostración.
     </p>
     <p>
-      Los rangos, colores y prioridades salen de §5.2 de la Especificación
-      Funcional. Las reglas sin umbral asignado no se evalúan: el motor no
-      inventa valores por defecto (C-05), y §16 prohíbe deducirlos de una base
-      de demostración.
+      La cartera de ejemplo incluye dos casos que no generan alerta y conviene
+      ver: <code>F-109</code> trae una nota crédito sin aplicar, que se netea
+      contra la factura más antigua del cliente y no contra la suya (C-10); y
+      <code>F-110</code> tiene saldo negativo, que es crédito a favor y nunca se
+      clasifica como mora (§5.3, caso T09).
     </p>
   </footer>
 </main>
 
-<script id="datos" type="application/json">__DATOS__</script>
-<script>
-(() => {
-  const D = JSON.parse(document.getElementById("datos").textContent);
-  const buckets = new Map(D.buckets.map(b => [b.codigo, b]));
-  const base = new Map(D.facturas_base.map(f => [f.factura, f]));
-  const TINTA = ["--p0", "--p1", "--p2", "--p3", "--p4"];
+<script type="module">
+__MOTOR__
+__CARTERA__
 
-  let preset = D.presets[0].id;
-  let indice = 0;
-  let seleccion = null;
+const $ = (id) => document.getElementById(id);
+const CAMPOS = [
+  ["dias_preventivos", "Días preventivos", "R06 · avisa antes de vencer", "entero"],
+  ["n_facturas_vencidas", "N facturas vencidas", "R03 · cliente reincidente", "entero"],
+  ["pct_mayor_90_umbral", "% cartera > 90 días", "A11 · envejecimiento crítico", "decimal"],
+  ["umbral_saldo_alto", "Umbral saldo alto", "R01 · eleva la prioridad", "dinero"],
+  ["umbral_saldo_critico", "Umbral saldo crítico", "R02 · alta exposición", "dinero"],
+  ["dias_sin_gestion", "Días sin gestión", "A12 · escalar al responsable", "entero"],
+];
 
-  const $ = id => document.getElementById(id);
-  const color = n => getComputedStyle(document.documentElement)
-    .getPropertyValue(TINTA[n] ?? "--p0").trim();
+let cartera = CARTERA.map((f) => ({ ...f }));
+let umbrales = { ...UMBRALES };
+let corte = CORTE_INICIAL;
+let siguiente = 300;
 
-  const pesos = v => {
-    const n = Math.round(Number(v));
-    return (n < 0 ? "−" : "") + "$ " + Math.abs(n).toLocaleString("es-CO");
-  };
-  const pct = v => Number(v).toLocaleString("es-CO", {
-    minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
-  const fecha = iso => {
-    const [a, m, d] = iso.split("-");
-    return `${d}/${m}/${a}`;
-  };
-  const dias = d => d === 0 ? "vence hoy" : d < 0 ? `faltan ${-d}` : `${d}`;
+const pesos = (c) => {
+  const n = Math.round(c / 100);
+  return (n < 0 ? "−" : "") + "$ " + Math.abs(n).toLocaleString("es-CO");
+};
+const pct = (p) => (p / 100).toLocaleString("es-CO", {
+  minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
+const diasTexto = (d) => d === 0 ? "vence hoy" : d < 0 ? `faltan ${-d}` : String(d);
+const color = (n) => getComputedStyle(document.documentElement)
+  .getPropertyValue(["--p0","--p1","--p2","--p3","--p4"][n] ?? "--p0").trim();
+const chip = (n, t) => {
+  const c = color(n);
+  return `<span class="chip" style="color:${c};background:color-mix(in srgb,${c} 12%,transparent);border-color:color-mix(in srgb,${c} 30%,transparent)">${t}</span>`;
+};
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (m) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
 
-  const chip = (n, texto) => {
-    const c = color(n);
-    return `<span class="chip" style="color:${c};background:color-mix(in srgb, ${c} 12%, transparent);border-color:color-mix(in srgb, ${c} 30%, transparent)">${texto}</span>`;
-  };
+// --- Umbrales ---
+$("umbrales").innerHTML = CAMPOS.map(([clave, titulo, pista, tipo]) => `
+  <label class="campo">
+    <span>${titulo}</span>
+    <input data-umbral="${clave}" data-tipo="${tipo}" inputmode="decimal"
+           value="${esc(umbrales[clave])}" placeholder="sin asignar" />
+    <span class="pista">${pista}</span>
+  </label>`).join("");
 
-  // --- Controles ---
-  $("presets").innerHTML = D.presets.map(p => `
-    <button type="button" class="preset" data-id="${p.id}"
-            aria-pressed="${p.id === preset}">
-      <strong>${p.nombre}</strong><span>${p.detalle}</span>
-    </button>`).join("");
-  $("presets").addEventListener("click", e => {
-    const b = e.target.closest(".preset");
-    if (!b) return;
-    preset = b.dataset.id;
-    [...$("presets").children].forEach(x =>
-      x.setAttribute("aria-pressed", String(x.dataset.id === preset)));
+$("umbrales").addEventListener("input", (e) => {
+  const campo = e.target.closest("[data-umbral]");
+  if (!campo) return;
+  const valor = campo.value.trim();
+  const malo = valor !== "" && !/^\d+(\.\d+)?$/.test(valor);
+  campo.classList.toggle("malo", malo);
+  // Un umbral a medio escribir no debe apagar la regla ni reventar el motor:
+  // se conserva el ultimo valor valido hasta que el nuevo lo sea.
+  if (!malo) { umbrales[campo.dataset.umbral] = valor; pintar(); }
+});
+
+// --- Corte ---
+$("corte").value = corte;
+$("corte").addEventListener("change", () => {
+  if ($("corte").value) { corte = $("corte").value; pintar(); }
+});
+document.querySelectorAll("[data-salto]").forEach((b) =>
+  b.addEventListener("click", () => {
+    const d = new Date(Date.parse(corte + "T00:00:00Z") + Number(b.dataset.salto) * 86400000);
+    corte = d.toISOString().slice(0, 10);
+    $("corte").value = corte;
     pintar();
+  }));
+
+// --- Cartera ---
+$("agregar").addEventListener("click", () => {
+  cartera.push({
+    factura: `F-${siguiente++}`, cliente: "900111",
+    nombre: CLIENTES["900111"] ?? "900111",
+    vencimiento: corte, emision: corte, saldo: "1000000", credito: "0",
   });
-
-  const rango = $("corte");
-  rango.max = String(D.cortes.length - 1);
-  rango.addEventListener("input", () => { indice = +rango.value; pintar(); });
-  $("esc-ini").textContent = fecha(D.cortes[0]);
-  $("esc-fin").textContent = fecha(D.cortes.at(-1));
-
-  // --- Pintado ---
-  function pintar() {
-    const e = D.escenarios[preset][indice];
-    const g = e.globales;
-
-    $("fecha").textContent = fecha(e.corte);
-    const nAlertas = e.alertas.length;
-    $("pista-corte").textContent =
-      `${nAlertas} ${nAlertas === 1 ? "alerta" : "alertas"} · ` +
-      `${e.facturas.filter(f => f.b).length} facturas con saldo deudor`;
-
-    $("kpis").innerHTML = [
-      ["Cartera total", g.cartera_total, null],
-      ["Por vencer", g.por_vencer, g.cartera_total],
-      ["Vence hoy", g.vence_hoy, g.cartera_total],
-      ["Vencida", g.vencida, g.cartera_total],
-      ["Más de 90 días", g.mayor_90, g.cartera_total],
-    ].map(([et, v, tot]) => `
-      <div class="kpi">
-        <p class="etiqueta">${et}</p>
-        <p class="v">${pesos(v)}</p>
-        <p class="p">${tot ? pct(Number(v) / Number(tot) * 100) + " del total" : "&nbsp;"}</p>
-      </div>`).join("");
-
-    const total = Number(g.cartera_total) || 1;
-    $("barra").innerHTML = D.buckets.map(b => {
-      const s = Number(e.por_bucket[b.codigo] ?? 0);
-      return s <= 0 ? "" :
-        `<div class="seg" style="flex-grow:${s / total};background:${b.color}"
-              title="${b.etiqueta}: ${pesos(s)}"></div>`;
-    }).join("");
-    $("leyenda").innerHTML = D.buckets.map(b => {
-      const s = Number(e.por_bucket[b.codigo] ?? 0);
-      return `<span style="${s > 0 ? "" : "opacity:.35"}">
-        <i style="background:${b.color}"></i>${b.etiqueta}
-        <span class="num apag">${s > 0 ? pesos(s) : "—"}</span></span>`;
-    }).join("");
-
-    $("libro").innerHTML = e.facturas.map(f => {
-      const b = f.b ? buckets.get(f.b) : null;
-      const est = base.get(f.f);
-      const nombre = D.clientes[est.cliente] ?? est.cliente;
-      return `<tr data-f="${f.f}" aria-selected="${seleccion === f.f}">
-        <td><span class="mono">${f.f}</span>
-            ${Number(est.credito_aplicado) > 0
-              ? `<div class="apag" style="font-size:11px">bruto ${pesos(est.saldo_bruto)} − crédito ${pesos(est.credito_aplicado)}</div>`
-              : ""}</td>
-        <td style="font-size:12px">${nombre}</td>
-        <td class="d num">${dias(f.d)}</td>
-        <td>${b
-            ? `<span class="rayita" style="background:${b.color}"></span>${b.etiqueta}`
-            : `<span class="apag">${est.sin_bucket}</span>`}</td>
-        <td class="d num">${pesos(est.saldo)}</td>
-        <td>${f.a.length
-            ? f.a.map(c => `<span class="cod mono">${c}</span>`).join("")
-            : `<span class="apag">—</span>`}</td>
-      </tr>`;
-    }).join("");
-
-    const orden = [...e.alertas].sort((a, b) =>
-      b.prioridad - a.prioridad || a.codigo.localeCompare(b.codigo));
-    $("tit-alertas").textContent = seleccion
-      ? `Qué disparó · aislando ${seleccion}`
-      : "Qué disparó";
-    $("n-alertas").textContent = orden.length
-      ? `${orden.length} ${orden.length === 1 ? "alerta" : "alertas"}`
-      : "";
-    $("alertas").innerHTML = orden.length ? orden.map(a => {
-      const opaca = seleccion && a.factura !== seleccion;
-      return `<div class="alerta ${opaca ? "opaca" : ""}">
-        <div class="cab">
-          <span class="mono" style="font-weight:600">${a.codigo}</span>
-          <span>${a.etiqueta}</span>
-          ${chip(a.prioridad, a.prioridad_etiqueta)}
-          <span class="apag mono" style="font-size:11.5px;margin-left:auto">
-            ${a.factura ?? "del cliente"}</span>
-        </div>
-        <p class="por">${a.explicacion}</p>
-        ${a.elevada_por?.length
-          ? `<p class="por" style="color:var(--p2)">prioridad elevada · ${a.elevada_por.join(" · ")}</p>`
-          : ""}
-        <p class="acc">→ ${a.accion}</p>
-      </div>`;
-    }).join("") : `<p class="vacio">Ninguna alerta con esta configuración.</p>`;
-
-    const marc = e.marcadores.reduce((m, x) => {
-      (m[x.cliente] ??= []).push(x); return m; }, {});
-    $("clientes").innerHTML = Object.entries(e.clientes).map(([nit, c]) => `
-      <div class="alerta">
-        <div class="cab">
-          <span style="font-weight:600">${c.nombre}</span>
-          ${chip(c.prioridad, c.prioridad_etiqueta)}
-        </div>
-        <p class="por">
-          cartera ${pesos(c.cartera_total)} · vencida ${pct(c.pct_vencida)} ·
-          &gt;90 ${pct(c.pct_90)} · ${c.n_vencidas} facturas vencidas ·
-          máx ${c.dias_max} d
-        </p>
-        ${(marc[nit] ?? []).map(m =>
-          `<p class="acc"><span class="mono">${m.codigo}</span> ${m.etiqueta} — ${m.explicacion}</p>`).join("")}
-      </div>`).join("");
-
-    const inact = Object.entries(e.reglas_inactivas);
-    $("inactivas").innerHTML = inact.length ? inact.map(([cod, motivo]) => `
-      <div class="alerta">
-        <div class="cab"><span class="mono" style="font-weight:600">${cod}</span></div>
-        <p class="por">${motivo}</p>
-      </div>`).join("")
-      : `<p class="vacio">Todas las reglas se están evaluando.</p>`;
-
-    const activos = D.presets.find(p => p.id === preset).parametros;
-    $("catalogo").innerHTML = D.reglas.map(r => {
-      const falta = r.parametros.filter(p => !(p in activos));
-      const viva = falta.length === 0;
-      const emite = r.alerta ? `emite ${r.alerta}`
-        : r.marcador ? `marca ${r.marcador}`
-        : r.eleva_prioridad ? `eleva la prioridad ${r.eleva_prioridad} nivel` : "";
-      return `<div class="regla ${viva ? "" : "off"}">
-        <div class="n">
-          <span class="punto" style="background:${viva ? "var(--acento)" : "var(--tenue)"}"></span>
-          <b>${r.codigo}</b><span style="font-size:12.5px">${r.etiqueta}</span>
-        </div>
-        <p class="q">
-          ámbito ${r.ambito}${emite ? " · " + emite : ""}<br>
-          ${r.parametros.length
-            ? r.parametros.map(p => `<span class="mono">${p}</span> = ${activos[p] ?? "<em>sin asignar</em>"}`).join("<br>")
-            : "sin parámetros configurables"}
-        </p>
-      </div>`;
-    }).join("");
-  }
-
-  $("libro").addEventListener("click", ev => {
-    const tr = ev.target.closest("tr[data-f]");
-    if (!tr) return;
-    seleccion = seleccion === tr.dataset.f ? null : tr.dataset.f;
-    pintar();
-    // Con la lista desplazable, aislar sin llevar la vista a la primera alerta
-    // visible dejaria al usuario mirando un hueco opaco.
-    const primera = $("alertas").querySelector(".alerta:not(.opaca)");
-    if (seleccion && primera) {
-      $("alertas").scrollTop = primera.offsetTop - $("alertas").offsetTop - 8;
-    }
-  });
-
   pintar();
-})();
+});
+$("restaurar").addEventListener("click", () => {
+  cartera = CARTERA.map((f) => ({ ...f }));
+  umbrales = { ...UMBRALES };
+  corte = CORTE_INICIAL;
+  $("corte").value = corte;
+  document.querySelectorAll("[data-umbral]").forEach((i) => {
+    i.value = umbrales[i.dataset.umbral];
+    i.classList.remove("malo");
+  });
+  pintar();
+});
+$("vaciar").addEventListener("click", () => { cartera = []; pintar(); });
+
+$("cartera").addEventListener("input", (e) => {
+  const campo = e.target.closest("[data-campo]");
+  if (!campo) return;
+  const fila = cartera[Number(campo.closest("tr").dataset.i)];
+  const clave = campo.dataset.campo;
+  fila[clave] = campo.value;
+  if (clave === "cliente") fila.nombre = CLIENTES[campo.value] ?? campo.value;
+  if (clave === "vencimiento" && campo.value) {
+    fila.emision = new Date(Date.parse(campo.value + "T00:00:00Z") - 30 * 86400000)
+      .toISOString().slice(0, 10);
+  }
+  pintar({ conservarFoco: true });
+});
+$("cartera").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-quitar]");
+  if (!b) return;
+  cartera.splice(Number(b.dataset.quitar), 1);
+  pintar();
+});
+
+// --- Pintado ---
+function pintar({ conservarFoco = false } = {}) {
+  const activo = conservarFoco ? document.activeElement : null;
+  const marca = activo?.dataset
+    ? `${activo.closest("tr")?.dataset.i ?? ""}|${activo.dataset.campo ?? ""}`
+    : null;
+  const seleccion = activo?.selectionStart;
+
+  const validas = cartera.filter((f) =>
+    f.factura && f.vencimiento && /^\d{4}-\d{2}-\d{2}$/.test(f.vencimiento) &&
+    /^-?\d+(\.\d+)?$/.test(String(f.saldo).trim() || "x"));
+
+  const gestiones = Object.fromEntries(
+    validas.map((f) => [`${f.cliente}|${f.factura}`, GESTION_DESDE]));
+
+  const r = evaluar({ corte, movimientos: validas, parametros: umbrales, gestiones });
+  const g = r.globales;
+
+  $("kpis").innerHTML = [
+    ["Cartera total", g.carteraTotal, null],
+    ["Por vencer", g.porVencer, g.carteraTotal],
+    ["Vence hoy", g.venceHoy, g.carteraTotal],
+    ["Vencida", g.vencida, g.carteraTotal],
+    ["Más de 90 días", g.mayor90, g.carteraTotal],
+  ].map(([et, v, tot]) => `
+    <div class="kpi"><p class="etiqueta">${et}</p><p class="v">${pesos(v)}</p>
+    <p class="p">${tot ? pct(porcentaje(v, tot)) + " del total" : "&nbsp;"}</p></div>`).join("");
+
+  const total = g.carteraTotal || 1;
+  $("franja").innerHTML = BUCKETS.map((b) => {
+    const s = r.porBucket[b.codigo] ?? 0;
+    return s <= 0 ? "" :
+      `<div class="seg" style="flex-grow:${s / total};background:${b.color}" title="${b.etiqueta}: ${pesos(s)}"></div>`;
+  }).join("") || `<div class="seg" style="flex-grow:1"></div>`;
+  $("leyenda").innerHTML = BUCKETS.map((b) => {
+    const s = r.porBucket[b.codigo] ?? 0;
+    return `<span style="${s > 0 ? "" : "opacity:.35"}"><i style="background:${b.color}"></i>${b.etiqueta}
+      <span class="num apag">${s > 0 ? pesos(s) : "—"}</span></span>`;
+  }).join("");
+
+  const porFactura = new Map(r.facturas.map((f) => [f.factura, f]));
+  $("cartera").innerHTML = cartera.length ? cartera.map((f, i) => {
+    const calc = porFactura.get(f.factura);
+    const b = calc?.bucket ? BUCKETS.find((x) => x.codigo === calc.bucket) : null;
+    return `<tr data-i="${i}">
+      <td><input data-campo="factura" value="${esc(f.factura)}" style="width:76px" /></td>
+      <td><input data-campo="cliente" value="${esc(f.cliente)}" style="width:78px"
+                 title="${esc(f.nombre ?? "")}" /></td>
+      <td><input data-campo="vencimiento" type="date" value="${esc(f.vencimiento)}" style="width:132px" /></td>
+      <td class="d"><input data-campo="saldo" value="${esc(f.saldo)}" class="d" style="width:96px" /></td>
+      <td class="d"><input data-campo="credito" value="${esc(f.credito)}" class="d" style="width:88px" /></td>
+      <td class="d num">${calc ? diasTexto(calc.dias) : "—"}</td>
+      <td class="rango">${b ? `<span class="rayita" style="background:${b.color}"></span>${b.etiqueta}`
+             : `<span class="apag">${calc?.sinBucket ?? "—"}</span>`}
+          ${calc && calc.aplicadoC > 0
+            ? `<div class="desglose">bruto ${pesos(calc.brutoC)} − crédito ${pesos(calc.aplicadoC)}</div>` : ""}</td>
+      <td>${calc?.alertas.length
+            ? calc.alertas.map((c) => `<span class="cod">${c}</span>`).join("")
+            : `<span class="apag">—</span>`}</td>
+      <td><button type="button" class="quitar" data-quitar="${i}" aria-label="Quitar ${esc(f.factura)}">×</button></td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="9" class="vacio">
+      Sin facturas. Pulsa «+ Factura» o «Restaurar ejemplo».</td></tr>`;
+
+  $("n-alertas").textContent = r.alertas.length
+    ? `${r.alertas.length} ${r.alertas.length === 1 ? "alerta" : "alertas"}` : "";
+  $("alertas").innerHTML = r.alertas.length ? r.alertas.map((a) => `
+    <div class="alerta">
+      <div class="cab">
+        <span class="mono" style="font-weight:600">${a.codigo}</span>
+        <span>${a.etiqueta}</span>${chip(a.prioridad, PRIORIDADES[a.prioridad])}
+        <span class="apag mono" style="font-size:11px;margin-left:auto">${esc(a.factura ?? "del cliente")}</span>
+      </div>
+      <p class="por">${esc(a.explicacion)}</p>
+      ${a.elevadaPor?.length
+        ? `<p class="por" style="color:var(--p2)">prioridad elevada desde ${a.prioridadBase} · ${a.elevadaPor.map(esc).join(" · ")}</p>` : ""}
+      <p class="acc">→ ${esc(a.accion)}</p>
+    </div>`).join("")
+    : `<p class="vacio">Ninguna alerta con esta cartera y estos umbrales.</p>`;
+
+  const marcPorCliente = r.marcadores.reduce((m, x) => {
+    (m[x.cliente] ??= []).push(x); return m; }, {});
+  $("clientes").innerHTML = r.clientes.length ? r.clientes.map((c) => `
+    <div class="alerta">
+      <div class="cab"><span style="font-weight:600">${esc(c.nombre)}</span>
+        ${chip(c.prioridad, PRIORIDADES[c.prioridad])}</div>
+      <p class="por">cartera ${pesos(c.carteraTotal)} · vencida ${pct(c.pctVencida)} ·
+        &gt;90 ${pct(c.pct90)} · ${c.nVencidas} de ${c.nFacturas} vencidas · máx ${c.diasMax} d</p>
+      ${(marcPorCliente[c.nit] ?? []).map((m) =>
+        `<p class="acc"><span class="mono">${m.codigo}</span> ${m.etiqueta} — ${esc(m.explicacion)}</p>`).join("")}
+    </div>`).join("")
+    : `<p class="vacio">Ningún cliente con saldo deudor.</p>`;
+
+  const inact = Object.entries(r.reglasInactivas);
+  $("inactivas").innerHTML = inact.length ? inact.map(([cod, motivo]) => `
+    <div class="alerta"><div class="cab"><span class="mono" style="font-weight:600">${cod}</span></div>
+    <p class="por">${esc(motivo)}</p></div>`).join("")
+    : `<p class="vacio">Todas las reglas se están evaluando.</p>`;
+
+  $("catalogo").innerHTML = REGLAS.map((rg) => {
+    const viva = !(rg.codigo in r.reglasInactivas);
+    return `<div class="regla ${viva ? "" : "off"}">
+      <div class="n"><span class="punto" style="background:${viva ? "var(--acento)" : "var(--tenue)"}"></span>
+        <b>${rg.codigo}</b><span style="font-size:12px">${rg.etiqueta}</span></div>
+      <p class="q">ámbito ${rg.ambito} · ${rg.efecto}<br>
+        ${rg.parametros.length
+          ? rg.parametros.map((p) => `<span class="mono">${p}</span> = ${
+              umbrales[p] ? esc(umbrales[p]) : "<em>sin asignar</em>"}`).join("<br>")
+          : "sin parámetros configurables"}</p></div>`;
+  }).join("");
+
+  // Reconstruir la tabla pierde el foco: editar una fecha campo a campo seria
+  // imposible si cada tecla devolviera el cursor al principio del documento.
+  if (marca) {
+    const [i, clave] = marca.split("|");
+    const destino = $("cartera").querySelector(`tr[data-i="${i}"] [data-campo="${clave}"]`);
+    if (destino) {
+      destino.focus();
+      if (seleccion != null && destino.type !== "date") {
+        try { destino.setSelectionRange(seleccion, seleccion); } catch {}
+      }
+    }
+  }
+}
+
+pintar();
 </script>
