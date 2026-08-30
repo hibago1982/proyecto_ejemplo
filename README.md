@@ -21,7 +21,8 @@ depende de decisiones de infraestructura pendientes.
 | 4. Panel de control | **Completo** — React + Vite contra el API real |
 | 5. Lista de gestión y detalle | **Completa** — bandeja priorizada, filtros, búsqueda y ficha de cliente |
 | 6. Gestión y compromisos | **Completa** — registro, estados, compromisos y A12 activa |
-| 7–8 | Pendiente |
+| 7. Salidas formales | **Completa** — PDF y Excel desde el mismo resultado persistido |
+| 8. Auditoría y despliegue | **Completa** — roles, autenticación, ejecución programada |
 
 ## Estructura
 
@@ -158,9 +159,22 @@ exige conservar los dos decimales en el calculo y en la auditoria, y
 serializarlos como cadena es lo unico que lo garantiza de extremo a extremo.
 Hay una prueba que falla si algun monto se declara `number` en el contrato.
 
-**La empresa llega en la cabecera `X-Empresa-Id`, y eso todavia no es
-seguridad.** Es un marcador de posicion: §8.4 exige permisos y C-13 define los
-roles, pero son de la fase 8. Ver la advertencia en `api/dependencias.py`.
+**Autenticación y roles.** `POST /api/v1/sesion` devuelve un token firmado; el
+resto de endpoints lo esperan en `Authorization: Bearer`. La empresa y el rol
+van dentro del token, así que no se pueden cambiar sin invalidar la firma.
+
+Los cuatro roles de C-13 son acumulativos, y cada endpoint declara su suelo:
+
+| Rol | Puede |
+|-----|-------|
+| Consulta | Leer el panel, la lista, el detalle y exportar |
+| Gestor de cartera | Además registrar gestiones |
+| Coordinador | Además ejecutar el motor y reprocesar cortes |
+| Administrador | Además modificar umbrales y reglas |
+
+```bash
+export BUSINT_CLAVE_FIRMA="..."   # sin ella el API se niega a emitir tokens
+```
 
 ## Pantallas
 
@@ -213,6 +227,43 @@ cd frontend && npm run dev             # panel en :5173
 los colores de aging llegan calculados del API. Recalcular cualquiera de ellos
 en el navegador sería una segunda implementación que podría divergir del PDF y
 del Excel, que es justo lo que §16 prohíbe al exigir una sola fuente de cálculo.
+
+## Salidas formales
+
+`GET /api/v1/exportar/excel` y `/exportar/pdf`. Ambas leen del mismo resultado
+persistido que la pantalla, que es la única forma de cumplir §13: *"el PDF y
+Excel muestran exactamente la misma clasificación que la pantalla para el mismo
+corte"*. Hay pruebas que comparan las tres cifra a cifra.
+
+El Excel trae cuatro hojas —alertas, riesgo por cliente, aging y parámetros— con
+las columnas de auditoría que pide §9: código de alerta, prioridad, días,
+explicación y el desglose de saldo bruto menos crédito aplicado. El PDF se
+genera desde HTML con WeasyPrint, así que reutiliza el sistema de diseño de la
+pantalla en vez de mantener dos maquetaciones.
+
+## Ejecución programada
+
+```python
+from busint_alertas.planificador import Programacion, crear_planificador
+
+crear_planificador(Programacion(fabrica, fuente, empresas=["E01"], hora=5))
+```
+
+APScheduler a las 05:00 de America/Bogotá (C-11). La corrida programada llama a
+la **misma** función que el botón de reproceso manual: que no existan dos
+caminos es lo que evita que el corte nocturno dé un resultado distinto al que se
+ve en pantalla. Un fallo en una empresa no detiene a las demás, y queda en
+`ar_ejecucion`.
+
+## Probarlo entero
+
+```bash
+python herramientas/servidor_demo.py   # API en :8000, corte ya calculado
+cd frontend && npm run dev             # panel en :5173
+```
+
+Usuarios de demostración, uno por rol: `consulta`, `gestor`, `coordinador`,
+`admin`, todos con clave `demo1234`.
 
 ## Pruebas
 

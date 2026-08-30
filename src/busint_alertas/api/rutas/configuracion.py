@@ -10,11 +10,12 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, status
 
 from ...core.parametros import Parametros
-from ...core.tipos import Fase
+from ...core.tipos import FASE_VIGENTE
 from ...motores.cartera.reglas import REGLAS
 from ...persistencia import configuracion as config_bd
 from .. import consultas
 from ..dependencias import Empresa, SesionBD
+from ..seguridad import Administrador
 from ..esquemas import (
     BucketConfigurado,
     CambioParametro,
@@ -49,7 +50,7 @@ def obtener(sesion: SesionBD, empresa_id: Empresa) -> Configuracion:
     reglas = []
     for regla in REGLAS:
         faltantes = config.parametros.faltantes(regla.parametros_requeridos)
-        motivo = regla.inactiva_porque(config.parametros, Fase.F2_PERSISTENCIA)
+        motivo = regla.inactiva_porque(config.parametros, FASE_VIGENTE)
         propios = {
             n: str(config.parametros.valores[n])
             for n in regla.parametros_requeridos
@@ -78,11 +79,12 @@ def obtener(sesion: SesionBD, empresa_id: Empresa) -> Configuracion:
 )
 def fijar(
     sesion: SesionBD,
-    empresa_id: Empresa,
+    quien: Administrador,
     codigo: str,
     nombre: str,
     cambio: CambioParametro,
 ) -> Configuracion:
+    """§8.4: solo usuarios autorizados modifican reglas. C-13 fija cual rol."""
     regla = next((r for r in REGLAS if r.codigo == codigo), None)
     if regla is None:
         raise HTTPException(
@@ -98,11 +100,11 @@ def fijar(
 
     try:
         config_bd.fijar_parametro(
-            sesion, empresa_id, codigo, nombre, cambio.valor, cambio.usuario_id
+            sesion, quien.empresa_id, codigo, nombre, cambio.valor, quien.usuario_id
         )
     except LookupError as e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(e)) from None
-    return obtener(sesion, empresa_id)
+    return obtener(sesion, quien.empresa_id)
 
 
 def _validar(regla, nombre: str, valor: str) -> None:

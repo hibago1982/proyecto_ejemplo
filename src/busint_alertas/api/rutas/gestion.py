@@ -15,6 +15,7 @@ from ...core.tipos import TipoGestion
 from ...persistencia import gestion as gestion_bd
 from .. import consultas
 from ..dependencias import CorteResuelto, Empresa, SesionBD
+from ..seguridad import Gestor
 from ..esquemas import (
     DetalleCliente,
     FilaGestion,
@@ -112,7 +113,7 @@ def detalle(
 )
 def registrar_gestion(
     sesion: SesionBD,
-    empresa_id: Empresa,
+    quien: Gestor,
     cliente_nit: str,
     peticion: NuevaGestion,
     corte: CorteResuelto,
@@ -132,11 +133,14 @@ def registrar_gestion(
 
     try:
         fila = gestion_bd.registrar(
-            sesion, empresa_id, corte,
+            sesion, quien.empresa_id, corte,
             gestion_bd.NuevaGestion(
                 cliente_nit=cliente_nit,
                 factura=peticion.factura,
-                usuario_id=peticion.usuario_id,
+                # El usuario sale del token y no del cuerpo: §10.3 exige saber
+                # quien hizo cada gestion, y un dato que el cliente elige no
+                # sirve como rastro.
+                usuario_id=quien.usuario_id,
                 tipo=tipo,
                 resultado=peticion.resultado,
                 observacion=peticion.observacion,

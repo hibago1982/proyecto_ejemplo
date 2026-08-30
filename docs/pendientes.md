@@ -28,6 +28,21 @@ Correcciones que la especificacion obligo a hacer sobre lo que se habia supuesto
 - **Los colores y prioridades de los buckets** eran invencion propia. Ahora son
   los de §5.2.
 
+## A-bis. Estado al cerrar las ocho etapas
+
+Las ocho etapas del plan de §8 estan implementadas. Lo que queda abierto no es
+codigo por escribir, sino decisiones y verificaciones que no pueden hacerse
+desde aqui:
+
+| Pendiente | Por que sigue abierto |
+|-----------|----------------------|
+| **PostgreSQL nunca se ha ejecutado** | Todo se probo sobre SQLite. El DDL exclusivo de PG (JSONB, indice GIN, `CREATE POLICY`, el rol `busint_app`) esta escrito y jamas ha corrido. Es lo primero que hay que hacer antes de un piloto. |
+| **Umbrales monetarios reales** | R01 y R02 se activan solas cuando la empresa los fije. §16 prohibe deducirlos de la base de demostracion. |
+| **`dias_sin_gestion` de A12** | Igual: la regla ya funciona, le falta el valor. |
+| **C-10 contra datos reales** | La logica de notas credito nunca se ha corrido contra un extracto que las traiga; el archivo de prueba tiene la columna en cero. |
+| **Alta de usuarios** | Se crean por codigo. Falta la pantalla de administracion de usuarios. |
+| **Revocacion de tokens** | Un token robado vale hasta que caduca (12 h). Si eso no basta, hace falta una lista de revocacion. |
+
 ## B. Decisiones de negocio (§9 del documento)
 
 Las ocho decisiones del documento siguen abiertas. Estas tres afectan el motor y

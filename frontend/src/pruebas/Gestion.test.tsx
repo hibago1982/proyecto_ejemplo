@@ -27,7 +27,7 @@ function montar(sobrescribir: Partial<Cliente> = {}) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={qc}>
-      <DetalleCliente cliente={cliente} nit="90010001818" usuarioId="hbarrera" />
+      <DetalleCliente cliente={cliente} nit="90010001818" />
     </QueryClientProvider>,
   );
   return cliente;
@@ -46,8 +46,7 @@ describe("Registrar gestión", () => {
         "90010001818",
         expect.objectContaining({
           tipo: "llamada",
-          usuario_id: "hbarrera",
-          resultado: "Contactado",
+              resultado: "Contactado",
         }),
       ),
     );

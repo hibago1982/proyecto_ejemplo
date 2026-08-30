@@ -5,7 +5,8 @@
  * menus intermedios. Por eso la barra es una sola linea y el drill-down ocurre
  * pulsando una fila, no navegando por un arbol.
  */
-import type { Cliente } from "./api/cliente";
+import type { Cliente, Sesion } from "./api/cliente";
+import { Exportar } from "./componentes/Exportar";
 import { DetalleCliente } from "./DetalleCliente";
 import { ListaGestion } from "./ListaGestion";
 import { Panel } from "./Panel";
@@ -18,10 +19,12 @@ const PESTANAS: { vista: Vista; etiqueta: string }[] = [
 
 export function App({
   cliente,
-  usuarioId,
+  sesion,
+  onSalir,
 }: {
   cliente: Cliente;
-  usuarioId: string;
+  sesion: Sesion;
+  onSalir: () => void;
 }) {
   const vista = useVista();
 
@@ -49,11 +52,25 @@ export function App({
               </a>
             );
           })}
+
+          <div className="ml-auto flex items-center gap-entre text-menor text-apagado">
+            <Exportar cliente={cliente} />
+            <span className="text-tenue">
+              {sesion.nombre || sesion.usuario_id} · {sesion.rol_etiqueta}
+            </span>
+            <button
+              type="button"
+              onClick={onSalir}
+              className="transition-colors duration-estado hover:text-tinta"
+            >
+              Salir
+            </button>
+          </div>
         </div>
       </nav>
 
       {vista.nombre === "cliente" ? (
-        <DetalleCliente cliente={cliente} nit={vista.nit} usuarioId={usuarioId} />
+        <DetalleCliente cliente={cliente} nit={vista.nit} />
       ) : vista.nombre === "gestion" ? (
         <ListaGestion cliente={cliente} />
       ) : (

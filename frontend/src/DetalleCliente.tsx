@@ -43,11 +43,9 @@ const TIPOS: Record<string, string> = {
 export function DetalleCliente({
   cliente,
   nit,
-  usuarioId = "sin_identificar",
 }: {
   cliente: Cliente;
   nit: string;
-  usuarioId?: string;
 }) {
   const detalle = useQuery({
     queryKey: ["cliente", nit],
@@ -148,12 +146,7 @@ export function DetalleCliente({
         </table>
       </Superficie>
 
-      <RegistrarGestion
-        cliente={cliente}
-        nit={nit}
-        alertas={d.alertas}
-        usuarioId={usuarioId}
-      />
+      <RegistrarGestion cliente={cliente} nit={nit} alertas={d.alertas} />
 
       <Historial gestiones={d.gestiones ?? []} />
     </div>

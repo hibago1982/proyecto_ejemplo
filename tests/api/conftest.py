@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -12,14 +13,30 @@ from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy.pool import StaticPool  # noqa: E402
 
 from busint_alertas.api import crear_app  # noqa: E402
+from busint_alertas.core.tipos import Rol  # noqa: E402
 from busint_alertas.motores.cartera import Movimiento  # noqa: E402
 from busint_alertas.persistencia import (  # noqa: E402
     crear_engine, crear_esquema, fabrica_de_sesiones, sembrar,
 )
+from busint_alertas.persistencia import usuarios as usuarios_bd  # noqa: E402
+from busint_alertas.persistencia.usuarios import crear as crear_usuario  # noqa: E402
+
+CLAVE = "clave-larga-de-prueba"
+
+#: Un usuario por rol, para poder comprobar que cada endpoint exige el suyo.
+USUARIOS = {
+    Rol.CONSULTA: "ana",
+    Rol.GESTOR: "gestor",
+    Rol.COORDINADOR: "coord",
+    Rol.ADMINISTRADOR: "admin",
+}
 
 EMPRESA = "E01"
 CORTE = date(2026, 8, 21)
-CABECERA = {"X-Empresa-Id": EMPRESA}
+
+# La firma se fija en la prueba: sin BUSINT_CLAVE_FIRMA el API se niega a
+# emitir tokens, que es justo lo que debe hacer en produccion.
+os.environ.setdefault("BUSINT_CLAVE_FIRMA", "clave-de-prueba")
 
 
 def factura(numero, dias, saldo="1000000", nit="900", vendedor="ANA", zona="NORTE"):
@@ -47,6 +64,18 @@ class FuenteFalsa:
         return iter(self.movimientos)
 
 
+@pytest.fixture(autouse=True)
+def cifrado_rapido(monkeypatch):
+    """Baja el coste de PBKDF2 solo en estas pruebas.
+
+    El coste real es deliberado, pero multiplicado por cinco usuarios y cada
+    fixture convertia la suite en dos minutos. Se hace con monkeypatch y no
+    asignando el modulo, para que no se filtre a `test_usuarios.py`, que si
+    verifica el cifrado con el coste de produccion.
+    """
+    monkeypatch.setattr(usuarios_bd, "ITERACIONES", 1_000)
+
+
 @pytest.fixture
 def engine():
     """SQLite en memoria compartida entre conexiones.
@@ -70,6 +99,10 @@ def fabrica(engine):
             s, EMPRESA, dias_preventivos=15, n_facturas_vencidas=3,
             pct_mayor_90_umbral=Decimal("40"),
         )
+        for rol, nombre in USUARIOS.items():
+            crear_usuario(s, nombre, CLAVE, EMPRESA, rol, nombre.title())
+        # Un usuario de otra empresa, para comprobar el aislamiento.
+        crear_usuario(s, "intruso", CLAVE, "E99", Rol.ADMINISTRADOR, "Intruso")
         s.commit()
     return F
 
@@ -77,6 +110,21 @@ def fabrica(engine):
 @pytest.fixture
 def cliente(fabrica):
     return TestClient(crear_app(fabrica, fuente=FuenteFalsa(CARTERA)))
+
+
+def entrar(cliente, usuario: str = "admin") -> dict[str, str]:
+    """Inicia sesion y devuelve la cabecera de autorizacion."""
+    r = cliente.post(
+        "/api/v1/sesion", json={"usuario": usuario, "clave": CLAVE}
+    )
+    assert r.status_code == 200, r.text
+    return {"Authorization": f"Bearer {r.json()['token']}"}
+
+
+@pytest.fixture
+def CABECERA(cliente):
+    """Sesion de administrador: cubre todos los endpoints."""
+    return entrar(cliente, "admin")
 
 
 @pytest.fixture
@@ -99,7 +147,7 @@ def contar_consultas(engine):
 
 
 @pytest.fixture
-def cliente_corrido(cliente):
+def cliente_corrido(cliente, CABECERA):
     """API con un corte ya calculado."""
     respuesta = cliente.post(
         "/api/v1/ejecucion", json={"corte": str(CORTE)}, headers=CABECERA

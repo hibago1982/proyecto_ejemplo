@@ -160,6 +160,32 @@ class DetalleCliente(Modelo):
 
 
 # --------------------------------------------------------------------------
+# Sesion (§8.4, C-13)
+# --------------------------------------------------------------------------
+
+
+class Credenciales(BaseModel):
+    usuario: str = Field(min_length=1, max_length=64)
+    clave: str = Field(min_length=1)
+
+
+class Sesion(Modelo):
+    """Token de sesion y quien lo lleva.
+
+    El rol viaja para que el frontend pueda ocultar lo que el usuario no puede
+    hacer. No es la comprobacion: esa la hace el servidor en cada peticion.
+    """
+
+    token: str
+    expira: datetime
+    usuario_id: str
+    empresa_id: str
+    rol: int
+    rol_etiqueta: str
+    nombre: str
+
+
+# --------------------------------------------------------------------------
 # Gestion de cobranza (§11)
 # --------------------------------------------------------------------------
 
@@ -173,7 +199,6 @@ class NuevaGestion(BaseModel):
 
     factura: str = Field(default="", description="Vacio para una alerta de cliente.")
     tipo: str = Field(description="llamada, correo, mensaje, visita, acuerdo, disputa u otra")
-    usuario_id: str = Field(min_length=1, max_length=64)
     resultado: str | None = Field(default=None, max_length=64)
     observacion: str | None = None
     compromiso_fecha: date | None = None
@@ -239,10 +264,11 @@ class CambioParametro(BaseModel):
     """Peticion para fijar un umbral.
 
     Es el camino por el que R01 y R02 se activan: sin despliegue, con rastro.
+    El usuario no viaja aqui: sale del token, porque un rastro que el cliente
+    firma a su gusto no es un rastro.
     """
 
     valor: str = Field(description="Valor nuevo. Se guarda como texto y la regla lo interpreta.")
-    usuario_id: str = Field(min_length=1, max_length=64)
 
 
 class EntradaAuditoria(Modelo):

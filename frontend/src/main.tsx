@@ -1,10 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { StrictMode } from "react";
+import { StrictMode, useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-import { crearCliente } from "./api/cliente";
+import { crearCliente, type Sesion } from "./api/cliente";
 import { App } from "./App";
+import { Entrar } from "./Entrar";
 import "./estilos.css";
+
+const CLAVE_SESION = "busint.sesion";
 
 const clienteConsultas = new QueryClient({
   defaultOptions: {
@@ -18,19 +21,46 @@ const clienteConsultas = new QueryClient({
   },
 });
 
-// Provisional, igual que en el backend: cuando exista autenticacion tanto la
-// empresa como el usuario saldran de la sesion y no de variables de arranque.
-// El usuario importa mas de lo que parece: §10.3 exige registrar quien hizo
-// cada gestion, y un rastro firmado por "sin_identificar" no sirve de nada.
-const EMPRESA_ID = import.meta.env["VITE_EMPRESA_ID"] ?? "E01";
-const USUARIO_ID = import.meta.env["VITE_USUARIO_ID"] ?? "demo";
+function leerSesion(): Sesion | null {
+  try {
+    const guardada = localStorage.getItem(CLAVE_SESION);
+    if (!guardada) return null;
+    const sesion = JSON.parse(guardada) as Sesion;
+    // Un token caducado no sirve: mejor pedir la clave que dejar al usuario
+    // ante una pantalla de errores que no puede resolver.
+    return new Date(sesion.expira) > new Date() ? sesion : null;
+  } catch {
+    return null;
+  }
+}
 
-const cliente = crearCliente({ empresaId: EMPRESA_ID });
+function Raiz() {
+  const [sesion, setSesion] = useState<Sesion | null>(leerSesion);
+
+  const salir = useCallback(() => {
+    localStorage.removeItem(CLAVE_SESION);
+    setSesion(null);
+    clienteConsultas.clear();
+  }, []);
+
+  const guardar = useCallback((nueva: Sesion) => {
+    localStorage.setItem(CLAVE_SESION, JSON.stringify(nueva));
+    setSesion(nueva);
+  }, []);
+
+  const cliente = crearCliente({
+    token: () => leerSesion()?.token ?? null,
+    alCaducar: salir,
+  });
+
+  if (!sesion) return <Entrar cliente={cliente} onEntrar={guardar} />;
+  return <App cliente={cliente} sesion={sesion} onSalir={salir} />;
+}
 
 createRoot(document.getElementById("raiz")!).render(
   <StrictMode>
     <QueryClientProvider client={clienteConsultas}>
-      <App cliente={cliente} usuarioId={USUARIO_ID} />
+      <Raiz />
     </QueryClientProvider>
   </StrictMode>,
 );

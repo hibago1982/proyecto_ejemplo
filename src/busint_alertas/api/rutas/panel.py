@@ -11,7 +11,7 @@ from decimal import Decimal
 
 from fastapi import APIRouter
 
-from ...core.tipos import Fase, Prioridad
+from ...core.tipos import FASE_VIGENTE, Prioridad
 from ...motores.cartera.reglas import REGLAS
 from ...persistencia import configuracion as config_bd
 from .. import consultas
@@ -99,7 +99,7 @@ def _reglas_inactivas(sesion, empresa_id: str) -> dict[str, str]:
         return {}
     inactivas = {}
     for regla in REGLAS:
-        motivo = regla.inactiva_porque(config.parametros, Fase.F2_PERSISTENCIA)
+        motivo = regla.inactiva_porque(config.parametros, FASE_VIGENTE)
         if motivo is not None:
             inactivas[regla.codigo] = motivo
     return inactivas

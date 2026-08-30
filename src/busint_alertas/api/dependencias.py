@@ -1,18 +1,9 @@
-"""Dependencias del API: sesion de base y empresa en contexto.
+"""Dependencias del API: sesion de base y corte en contexto.
 
-ADVERTENCIA SOBRE LA IDENTIDAD DE EMPRESA
------------------------------------------
-Hoy la empresa llega en una cabecera que el cliente controla. Eso NO es
-autenticacion: cualquiera que alcance el API puede pedir la cartera de otra
-empresa cambiando un valor.
-
-Es un marcador de posicion consciente. §8.4 exige permisos y C-13 define los
-cuatro roles, pero ambos son de la fase 8 del plan. Cuando esa fase llegue,
-`empresa_en_contexto` debe resolverse desde el token de sesion del usuario y
-no desde la peticion, y esta funcion es el unico punto que hay que cambiar.
-
-La segunda linea de defensa ya esta puesta: la seguridad a nivel de fila de
-PostgreSQL, que la migracion activa sobre las ocho tablas con `empresa_id`.
+La identidad del usuario, su empresa y su rol viven en `seguridad.py` y salen
+del token firmado. Hasta la etapa 7 llegaban en la cabecera `X-Empresa-Id`, que
+el cliente controlaba: cualquiera podia leer y escribir en la cartera de otra
+empresa cambiando un valor. Eso ya no es posible.
 """
 
 from __future__ import annotations
@@ -20,11 +11,13 @@ from __future__ import annotations
 from datetime import date
 from typing import Annotated, Iterator
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session, sessionmaker
 
 from ..core.fechas import hoy
+from ..persistencia.usuarios import Identidad
 from . import consultas
+from .seguridad import Consulta
 
 #: Se asigna al construir la aplicacion.
 _fabrica: sessionmaker[Session] | None = None
@@ -53,23 +46,16 @@ def obtener_sesion() -> Iterator[Session]:
 SesionBD = Annotated[Session, Depends(obtener_sesion)]
 
 
-def empresa_en_contexto(
-    x_empresa_id: Annotated[
-        str,
-        Header(
-            description="Empresa sobre la que se opera. PROVISIONAL: cuando "
-            "exista autenticacion debe salir del token, no de la peticion.",
-        ),
-    ],
-) -> str:
-    if not x_empresa_id.strip():
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, "La cabecera X-Empresa-Id no puede ir vacia."
-        )
-    return x_empresa_id.strip()
+def empresa_de(quien: Consulta) -> str:
+    """Empresa sobre la que opera quien hace la peticion.
+
+    Sale del token. No hay forma de pedir otra empresa: el dato no viaja en la
+    peticion, asi que no se puede cambiar sin invalidar la firma.
+    """
+    return quien.empresa_id
 
 
-Empresa = Annotated[str, Depends(empresa_en_contexto)]
+Empresa = Annotated[str, Depends(empresa_de)]
 
 
 def resolver_corte(

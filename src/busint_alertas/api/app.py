@@ -6,9 +6,8 @@ Excel tienen que leer del mismo resultado persistido. Este API es ese punto
 unico, y por eso el contrato OpenAPI que publica es tambien el documento del
 que se generan los tipos del frontend.
 
-La aplicacion nace con una sola empresa en mente por peticion, no por proceso:
-`X-Empresa-Id` viaja en cada llamada. Ver la advertencia de `dependencias.py`
-sobre por que eso todavia no es seguridad.
+La empresa y el rol de quien pide salen del token firmado, no de la peticion.
+Hasta la etapa 7 llegaban en una cabecera que el cliente controlaba.
 """
 
 from __future__ import annotations
@@ -18,7 +17,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from ..fuentes.base import FuenteDatos
 from . import dependencias
-from .rutas import configuracion, ejecucion, gestion, panel
+from .rutas import configuracion, ejecucion, exportar, gestion, panel, sesion
 
 DESCRIPCION = """
 Motor de alertas de cartera de BUSINT.
@@ -29,6 +28,10 @@ vigente y el valor que la disparo.
 
 **Los montos viajan como cadena**, no como numero, para conservar los dos
 decimales sin el error de redondeo de los flotantes de JavaScript.
+
+Autenticacion: `POST /api/v1/sesion` devuelve un token; el resto de endpoints
+lo esperan en `Authorization: Bearer`. Los permisos son acumulativos segun el
+rol (Consulta, Gestor, Coordinador, Administrador).
 """
 
 
@@ -56,10 +59,15 @@ def crear_app(
             {"name": "gestion", "description": "Lista de gestion y detalle de cliente (§8.2, §8.3)"},
             {"name": "configuracion", "description": "Reglas, umbrales y auditoria (§8.4, §10.3)"},
             {"name": "ejecucion", "description": "Corridas del motor (§10.2)"},
+            {"name": "exportar", "description": "PDF y Excel del corte (§9)"},
+            {"name": "sesion", "description": "Autenticacion y roles (§8.4, C-13)"},
         ],
     )
 
-    for router in (panel.router, gestion.router, configuracion.router, ejecucion.router):
+    for router in (
+        sesion.router, panel.router, gestion.router,
+        configuracion.router, ejecucion.router, exportar.router,
+    ):
         app.include_router(router, prefix="/api/v1")
 
     @app.get("/salud", tags=["panel"], summary="Sonda de salud")

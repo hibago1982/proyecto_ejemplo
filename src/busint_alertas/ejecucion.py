@@ -18,7 +18,7 @@ from typing import Iterable
 from sqlalchemy.orm import Session
 
 from .core.motor import ContextoEjecucion, ResultadoMotor
-from .core.tipos import Fase
+from .core.tipos import FASE_VIGENTE, Fase
 from .fuentes.base import FuenteDatos
 from .motores.cartera import MotorCartera
 from .motores.cartera.configuracion import ConfiguracionCartera
@@ -42,7 +42,7 @@ def ejecutar_corte(
     fuente: FuenteDatos,
     empresa_id: str,
     corte: date,
-    fase_vigente: Fase = Fase.F5_GESTION,
+    fase_vigente: Fase = FASE_VIGENTE,
     configuracion: ConfiguracionCartera | None = None,
 ) -> Corrida:
     """Corre el motor para un corte y persiste el resultado.
@@ -67,11 +67,20 @@ def ejecutar_corte(
         resultado = MotorCartera().evaluar(contexto, movimientos)
         resumen = repositorio.guardar(empresa_id, corte, resultado, config)
     except Exception as error:
-        # La bitacora se escribe aparte para que el fallo quede registrado
-        # aunque el resto de la transaccion se revierta.
+        # La bitacora de un fallo tiene que sobrevivir al fallo. Si se dejara en
+        # la misma transaccion, el rollback que descarta el corte a medias se
+        # llevaria tambien el registro de que algo salio mal, y §10.2 quedaria
+        # sin cumplir justo en el caso que importa.
+        #
+        # Por eso se revierte primero, se vuelve a escribir la bitacora sobre
+        # una sesion limpia y se confirma solo eso. Es un limite de transaccion
+        # deliberado y el unico del modulo.
+        sesion.rollback()
+        fallo = repositorio.abrir_ejecucion(empresa_id, corte)
         repositorio.cerrar_ejecucion(
-            bitacora, _RESUMEN_VACIO, 0, estado="error", mensaje=str(error)[:500]
+            fallo, _RESUMEN_VACIO, 0, estado="error", mensaje=str(error)[:500]
         )
+        sesion.commit()
         raise
 
     repositorio.cerrar_ejecucion(bitacora, resumen, len(movimientos))

@@ -8,6 +8,7 @@ FuenteAPI del ERP, cambiando solo esas dos lineas.
 
 from __future__ import annotations
 
+import os
 import sys
 from datetime import date
 from decimal import Decimal
@@ -21,13 +22,27 @@ from sqlalchemy.pool import StaticPool  # noqa: E402
 from busint_alertas.api import crear_app  # noqa: E402
 from busint_alertas.ejecucion import ejecutar_corte  # noqa: E402
 from busint_alertas.fuentes import FuenteExcel  # noqa: E402
+from busint_alertas.core.tipos import Rol  # noqa: E402
 from busint_alertas.persistencia import (  # noqa: E402
     crear_engine, crear_esquema, fabrica_de_sesiones, sembrar,
 )
+from busint_alertas.persistencia.usuarios import crear as crear_usuario  # noqa: E402
 
 ARCHIVO = RAIZ / "tests" / "datos" / "cartera_busint_sintetica.xlsx"
 CORTE = date(2026, 8, 21)
 EMPRESA = "E01"
+
+#: Usuarios de demostracion, uno por rol. Claves de juguete a proposito: este
+#: script no es un arranque de produccion y no debe parecerlo.
+USUARIOS = (
+    ("consulta", Rol.CONSULTA, "Ana Restrepo"),
+    ("gestor", Rol.GESTOR, "Carlos Mejia"),
+    ("coordinador", Rol.COORDINADOR, "Diana Toro"),
+    ("admin", Rol.ADMINISTRADOR, "Hiram Barrera"),
+)
+CLAVE_DEMO = "demo1234"
+
+os.environ.setdefault("BUSINT_CLAVE_FIRMA", "clave-de-demostracion-no-usar-en-produccion")
 
 
 def construir():
@@ -46,6 +61,10 @@ def construir():
             pct_mayor_90_umbral=Decimal("40"),
         )
         sesion.commit()
+        for usuario, rol, nombre in USUARIOS:
+            crear_usuario(sesion, usuario, CLAVE_DEMO, EMPRESA, rol, nombre)
+        sesion.commit()
+
         corrida = ejecutar_corte(sesion, fuente, EMPRESA, CORTE)
         sesion.commit()
         print(
@@ -53,6 +72,7 @@ def construir():
             f"{corrida.resumen.alertas_insertadas} alertas, "
             f"{corrida.resumen.clientes} clientes."
         )
+        print(f"Usuarios: {', '.join(u for u, _, _ in USUARIOS)} (clave {CLAVE_DEMO})")
 
     return crear_app(fabrica, fuente=fuente)
 

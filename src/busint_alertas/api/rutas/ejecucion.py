@@ -16,6 +16,7 @@ from ...ejecucion import ejecutar_corte
 from ...fuentes.base import ErrorDeOrigen, FuenteDatos
 from .. import consultas
 from ..dependencias import Empresa, SesionBD, corte_de_hoy
+from ..seguridad import Coordinador
 from ..esquemas import Ejecucion, PeticionEjecucion, ResultadoEjecucion
 
 router = APIRouter(tags=["ejecucion"])
@@ -36,8 +37,10 @@ def configurar_fuente(fuente: FuenteDatos) -> None:
     summary="Ejecutar el motor para un corte",
 )
 def ejecutar(
-    sesion: SesionBD, empresa_id: Empresa, peticion: PeticionEjecucion
+    sesion: SesionBD, quien: Coordinador, peticion: PeticionEjecucion
 ) -> ResultadoEjecucion:
+    """§10.2: reproceso manual. C-13 lo reserva al coordinador."""
+    empresa_id = quien.empresa_id
     if _fuente is None:
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,

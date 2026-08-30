@@ -79,6 +79,42 @@ class TipoGestion(Enum):
     OTRA = "otra"
 
 
+class Rol(Enum):
+    """Los cuatro roles que define C-13, en orden creciente de permisos.
+
+    §8.4 exige que solo usuarios autorizados modifiquen reglas, pero no decia
+    que roles existen. Estos son los del analisis:
+
+      * Consulta    - solo lectura.
+      * Gestor      - ademas registra gestiones de cobranza.
+      * Coordinador - ademas ejecuta el motor y reprocesa cortes.
+      * Administrador - ademas modifica parametros y reglas.
+    """
+
+    CONSULTA = 0
+    GESTOR = 1
+    COORDINADOR = 2
+    ADMINISTRADOR = 3
+
+    @property
+    def etiqueta(self) -> str:
+        return {
+            Rol.CONSULTA: "Consulta",
+            Rol.GESTOR: "Gestor de cartera",
+            Rol.COORDINADOR: "Coordinador",
+            Rol.ADMINISTRADOR: "Administrador",
+        }[self]
+
+    def alcanza(self, minimo: "Rol") -> bool:
+        """Si este rol cubre lo que exige `minimo`.
+
+        Los permisos son acumulativos: un administrador puede hacer todo lo que
+        hace un gestor. Modelarlo como orden y no como lista de permisos evita
+        que anadir un endpoint obligue a tocar cuatro definiciones de rol.
+        """
+        return self.value >= minimo.value
+
+
 class Fase(Enum):
     """Fase del plan de desarrollo en la que una regla queda operativa.
 
@@ -92,3 +128,12 @@ class Fase(Enum):
     F3_API = 3
     F4_PANEL = 4
     F5_GESTION = 5
+
+
+#: Fase que el sistema tiene desplegada hoy.
+#:
+#: Existe como constante unica a proposito. Estuvo repetida en tres sitios y se
+#: desincronizo: el motor evaluaba A12 mientras el panel la anunciaba como
+#: bloqueada por fase. Un usuario habria visto en pantalla que una regla no se
+#: evalua mientras sus alertas aparecian en la lista.
+FASE_VIGENTE = Fase.F5_GESTION

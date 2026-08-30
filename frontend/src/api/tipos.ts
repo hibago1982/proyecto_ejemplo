@@ -87,7 +87,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Fijar el valor de un parametro */
+        /**
+         * Fijar el valor de un parametro
+         * @description §8.4: solo usuarios autorizados modifican reglas. C-13 fija cual rol.
+         */
         put: operations["fijar_api_v1_configuracion_reglas__codigo__parametros__nombre__put"];
         post?: never;
         delete?: never;
@@ -123,8 +126,45 @@ export interface paths {
         /** Bitacora de corridas */
         get: operations["bitacora_api_v1_ejecucion_get"];
         put?: never;
-        /** Ejecutar el motor para un corte */
+        /**
+         * Ejecutar el motor para un corte
+         * @description §10.2: reproceso manual. C-13 lo reserva al coordinador.
+         */
         post: operations["ejecutar_api_v1_ejecucion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exportar/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Excel del corte */
+        get: operations["a_excel_api_v1_exportar_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exportar/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** PDF del corte */
+        get: operations["a_pdf_api_v1_exportar_pdf_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -176,6 +216,27 @@ export interface paths {
         get: operations["criticos_api_v1_panel_criticos_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sesion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Quien soy
+         * @description Permite al frontend recuperar la identidad sin volver a pedir la clave.
+         */
+        get: operations["quien_soy_api_v1_sesion_get"];
+        put?: never;
+        /** Iniciar sesion */
+        post: operations["iniciar_api_v1_sesion_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -251,10 +312,10 @@ export interface components {
          * @description Peticion para fijar un umbral.
          *
          *     Es el camino por el que R01 y R02 se activan: sin despliegue, con rastro.
+         *     El usuario no viaja aqui: sale del token, porque un rastro que el cliente
+         *     firma a su gusto no es un rastro.
          */
         CambioParametro: {
-            /** Usuario Id */
-            usuario_id: string;
             /**
              * Valor
              * @description Valor nuevo. Se guarda como texto y la regla lo interpreta.
@@ -318,6 +379,13 @@ export interface components {
             n_clientes: number;
             /** Version Parametros */
             version_parametros: string;
+        };
+        /** Credenciales */
+        Credenciales: {
+            /** Clave */
+            clave: string;
+            /** Usuario */
+            usuario: string;
         };
         /** DetalleCliente */
         DetalleCliente: {
@@ -527,8 +595,6 @@ export interface components {
              * @description llamada, correo, mensaje, visita, acuerdo, disputa u otra
              */
             tipo: string;
-            /** Usuario Id */
-            usuario_id: string;
         };
         /**
          * Panel
@@ -621,6 +687,32 @@ export interface components {
             version_parametros: string;
         };
         /**
+         * Sesion
+         * @description Token de sesion y quien lo lleva.
+         *
+         *     El rol viaja para que el frontend pueda ocultar lo que el usuario no puede
+         *     hacer. No es la comprobacion: esa la hace el servidor en cada peticion.
+         */
+        Sesion: {
+            /** Empresa Id */
+            empresa_id: string;
+            /**
+             * Expira
+             * Format: date-time
+             */
+            expira: string;
+            /** Nombre */
+            nombre: string;
+            /** Rol */
+            rol: number;
+            /** Rol Etiqueta */
+            rol_etiqueta: string;
+            /** Token */
+            token: string;
+            /** Usuario Id */
+            usuario_id: string;
+        };
+        /**
          * TarjetaKPI
          * @description Cifra del encabezado con su peso sobre el total.
          *
@@ -665,10 +757,7 @@ export interface operations {
             query?: {
                 corte?: string | null;
             };
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path: {
                 cliente_nit: string;
             };
@@ -699,10 +788,7 @@ export interface operations {
     gestiones_api_v1_clientes__cliente_nit__gestiones_get: {
         parameters: {
             query?: never;
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path: {
                 cliente_nit: string;
             };
@@ -735,10 +821,7 @@ export interface operations {
             query?: {
                 corte?: string | null;
             };
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path: {
                 cliente_nit: string;
             };
@@ -773,10 +856,7 @@ export interface operations {
     obtener_api_v1_configuracion_get: {
         parameters: {
             query?: never;
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -791,15 +871,6 @@ export interface operations {
                     "application/json": components["schemas"]["Configuracion"];
                 };
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
     historial_api_v1_configuracion_auditoria_get: {
@@ -807,10 +878,7 @@ export interface operations {
             query?: {
                 limite?: number;
             };
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -839,10 +907,7 @@ export interface operations {
     fijar_api_v1_configuracion_reglas__codigo__parametros__nombre__put: {
         parameters: {
             query?: never;
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path: {
                 codigo: string;
                 nombre: string;
@@ -878,10 +943,7 @@ export interface operations {
     listar_cortes_api_v1_cortes_get: {
         parameters: {
             query?: never;
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -896,15 +958,6 @@ export interface operations {
                     "application/json": components["schemas"]["Corte"][];
                 };
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
     bitacora_api_v1_ejecucion_get: {
@@ -912,10 +965,7 @@ export interface operations {
             query?: {
                 limite?: number;
             };
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -944,10 +994,7 @@ export interface operations {
     ejecutar_api_v1_ejecucion_post: {
         parameters: {
             query?: never;
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -977,6 +1024,68 @@ export interface operations {
             };
         };
     };
+    a_excel_api_v1_exportar_excel_get: {
+        parameters: {
+            query?: {
+                corte?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    a_pdf_api_v1_exportar_pdf_get: {
+        parameters: {
+            query?: {
+                corte?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     lista_api_v1_gestion_get: {
         parameters: {
             query?: {
@@ -992,10 +1101,7 @@ export interface operations {
                 por_pagina?: number;
                 corte?: string | null;
             };
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -1026,10 +1132,7 @@ export interface operations {
             query?: {
                 corte?: string | null;
             };
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -1061,10 +1164,7 @@ export interface operations {
                 limite?: number;
                 corte?: string | null;
             };
-            header: {
-                /** @description Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion. */
-                "x-empresa-id": string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -1077,6 +1177,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClienteEnRanking"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    quien_soy_api_v1_sesion_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sesion"];
+                };
+            };
+        };
+    };
+    iniciar_api_v1_sesion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Credenciales"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sesion"];
                 };
             };
             /** @description Validation Error */

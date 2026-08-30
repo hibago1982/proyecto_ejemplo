@@ -10,6 +10,7 @@ from __future__ import annotations
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from . import usuarios  # noqa: F401  (registra ar_usuario antes de create_all)
 from .modelo import Base
 
 

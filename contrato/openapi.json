@@ -125,14 +125,8 @@
         "type": "object"
       },
       "CambioParametro": {
-        "description": "Peticion para fijar un umbral.\n\nEs el camino por el que R01 y R02 se activan: sin despliegue, con rastro.",
+        "description": "Peticion para fijar un umbral.\n\nEs el camino por el que R01 y R02 se activan: sin despliegue, con rastro.\nEl usuario no viaja aqui: sale del token, porque un rastro que el cliente\nfirma a su gusto no es un rastro.",
         "properties": {
-          "usuario_id": {
-            "maxLength": 64,
-            "minLength": 1,
-            "title": "Usuario Id",
-            "type": "string"
-          },
           "valor": {
             "description": "Valor nuevo. Se guarda como texto y la regla lo interpreta.",
             "title": "Valor",
@@ -140,8 +134,7 @@
           }
         },
         "required": [
-          "valor",
-          "usuario_id"
+          "valor"
         ],
         "title": "CambioParametro",
         "type": "object"
@@ -279,6 +272,27 @@
           "n_clientes"
         ],
         "title": "Corte",
+        "type": "object"
+      },
+      "Credenciales": {
+        "properties": {
+          "clave": {
+            "minLength": 1,
+            "title": "Clave",
+            "type": "string"
+          },
+          "usuario": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Usuario",
+            "type": "string"
+          }
+        },
+        "required": [
+          "usuario",
+          "clave"
+        ],
+        "title": "Credenciales",
         "type": "object"
       },
       "DetalleCliente": {
@@ -878,17 +892,10 @@
             "description": "llamada, correo, mensaje, visita, acuerdo, disputa u otra",
             "title": "Tipo",
             "type": "string"
-          },
-          "usuario_id": {
-            "maxLength": 64,
-            "minLength": 1,
-            "title": "Usuario Id",
-            "type": "string"
           }
         },
         "required": [
-          "tipo",
-          "usuario_id"
+          "tipo"
         ],
         "title": "NuevaGestion",
         "type": "object"
@@ -1127,6 +1134,51 @@
         "title": "ResultadoEjecucion",
         "type": "object"
       },
+      "Sesion": {
+        "description": "Token de sesion y quien lo lleva.\n\nEl rol viaja para que el frontend pueda ocultar lo que el usuario no puede\nhacer. No es la comprobacion: esa la hace el servidor en cada peticion.",
+        "properties": {
+          "empresa_id": {
+            "title": "Empresa Id",
+            "type": "string"
+          },
+          "expira": {
+            "format": "date-time",
+            "title": "Expira",
+            "type": "string"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "rol": {
+            "title": "Rol",
+            "type": "integer"
+          },
+          "rol_etiqueta": {
+            "title": "Rol Etiqueta",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          },
+          "usuario_id": {
+            "title": "Usuario Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "expira",
+          "usuario_id",
+          "empresa_id",
+          "rol",
+          "rol_etiqueta",
+          "nombre"
+        ],
+        "title": "Sesion",
+        "type": "object"
+      },
       "TarjetaKPI": {
         "description": "Cifra del encabezado con su peso sobre el total.\n\nEl porcentaje viaja calculado desde el servidor: si lo calculara el\nfrontend seria una segunda implementacion del indicador, que es justo lo\nque §16 prohibe.",
         "properties": {
@@ -1199,7 +1251,7 @@
     }
   },
   "info": {
-    "description": "\nMotor de alertas de cartera de BUSINT.\n\nConvierte el aging de cuentas por cobrar en una lista de trabajo priorizada.\nToda alerta lleva la explicacion de por que se disparo: la regla, el parametro\nvigente y el valor que la disparo.\n\n**Los montos viajan como cadena**, no como numero, para conservar los dos\ndecimales sin el error de redondeo de los flotantes de JavaScript.\n",
+    "description": "\nMotor de alertas de cartera de BUSINT.\n\nConvierte el aging de cuentas por cobrar en una lista de trabajo priorizada.\nToda alerta lleva la explicacion de por que se disparo: la regla, el parametro\nvigente y el valor que la disparo.\n\n**Los montos viajan como cadena**, no como numero, para conservar los dos\ndecimales sin el error de redondeo de los flotantes de JavaScript.\n\nAutenticacion: `POST /api/v1/sesion` devuelve un token; el resto de endpoints\nlo esperan en `Authorization: Bearer`. Los permisos son acumulativos segun el\nrol (Consulta, Gestor, Coordinador, Administrador).\n",
     "title": "BUSINT - Motor de alertas de cartera",
     "version": "0.1.0"
   },
@@ -1233,17 +1285,6 @@
                 }
               ],
               "title": "Corte"
-            }
-          },
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
-              "type": "string"
             }
           }
         ],
@@ -1285,17 +1326,6 @@
             "required": true,
             "schema": {
               "title": "Cliente Nit",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
               "type": "string"
             }
           }
@@ -1360,17 +1390,6 @@
               ],
               "title": "Corte"
             }
-          },
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
-              "type": "string"
-            }
           }
         ],
         "requestBody": {
@@ -1414,19 +1433,6 @@
     "/api/v1/configuracion": {
       "get": {
         "operationId": "obtener_api_v1_configuracion_get",
-        "parameters": [
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "content": {
@@ -1437,16 +1443,6 @@
               }
             },
             "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
         "summary": "Reglas y buckets vigentes",
@@ -1467,17 +1463,6 @@
               "default": 100,
               "title": "Limite",
               "type": "integer"
-            }
-          },
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
-              "type": "string"
             }
           }
         ],
@@ -1515,6 +1500,7 @@
     },
     "/api/v1/configuracion/reglas/{codigo}/parametros/{nombre}": {
       "put": {
+        "description": "§8.4: solo usuarios autorizados modifican reglas. C-13 fija cual rol.",
         "operationId": "fijar_api_v1_configuracion_reglas__codigo__parametros__nombre__put",
         "parameters": [
           {
@@ -1532,17 +1518,6 @@
             "required": true,
             "schema": {
               "title": "Nombre",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
               "type": "string"
             }
           }
@@ -1588,19 +1563,6 @@
     "/api/v1/cortes": {
       "get": {
         "operationId": "listar_cortes_api_v1_cortes_get",
-        "parameters": [
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "content": {
@@ -1615,16 +1577,6 @@
               }
             },
             "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
         "summary": "Cortes disponibles",
@@ -1645,17 +1597,6 @@
               "default": 20,
               "title": "Limite",
               "type": "integer"
-            }
-          },
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
-              "type": "string"
             }
           }
         ],
@@ -1691,20 +1632,8 @@
         ]
       },
       "post": {
+        "description": "§10.2: reproceso manual. C-13 lo reserva al coordinador.",
         "operationId": "ejecutar_api_v1_ejecucion_post",
-        "parameters": [
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
-              "type": "string"
-            }
-          }
-        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1740,6 +1669,98 @@
         "summary": "Ejecutar el motor para un corte",
         "tags": [
           "ejecucion"
+        ]
+      }
+    },
+    "/api/v1/exportar/excel": {
+      "get": {
+        "operationId": "a_excel_api_v1_exportar_excel_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "corte",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Corte"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Excel del corte",
+        "tags": [
+          "exportar"
+        ]
+      }
+    },
+    "/api/v1/exportar/pdf": {
+      "get": {
+        "operationId": "a_pdf_api_v1_exportar_pdf_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "corte",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Corte"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "PDF del corte",
+        "tags": [
+          "exportar"
         ]
       }
     },
@@ -1898,17 +1919,6 @@
               ],
               "title": "Corte"
             }
-          },
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -1958,17 +1968,6 @@
                 }
               ],
               "title": "Corte"
-            }
-          },
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
-              "type": "string"
             }
           }
         ],
@@ -2030,17 +2029,6 @@
               ],
               "title": "Corte"
             }
-          },
-          {
-            "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-            "in": "header",
-            "name": "x-empresa-id",
-            "required": true,
-            "schema": {
-              "description": "Empresa sobre la que se opera. PROVISIONAL: cuando exista autenticacion debe salir del token, no de la peticion.",
-              "title": "X-Empresa-Id",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -2072,6 +2060,67 @@
         "summary": "Clientes que requieren atencion",
         "tags": [
           "panel"
+        ]
+      }
+    },
+    "/api/v1/sesion": {
+      "get": {
+        "description": "Permite al frontend recuperar la identidad sin volver a pedir la clave.",
+        "operationId": "quien_soy_api_v1_sesion_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sesion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Quien soy",
+        "tags": [
+          "sesion"
+        ]
+      },
+      "post": {
+        "operationId": "iniciar_api_v1_sesion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credenciales"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sesion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Iniciar sesion",
+        "tags": [
+          "sesion"
         ]
       }
     },
@@ -2117,6 +2166,14 @@
     {
       "description": "Corridas del motor (§10.2)",
       "name": "ejecucion"
+    },
+    {
+      "description": "PDF y Excel del corte (§9)",
+      "name": "exportar"
+    },
+    {
+      "description": "Autenticacion y roles (§8.4, C-13)",
+      "name": "sesion"
     }
   ]
 }

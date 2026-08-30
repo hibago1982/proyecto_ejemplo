@@ -28,12 +28,10 @@ export function RegistrarGestion({
   cliente,
   nit,
   alertas,
-  usuarioId,
 }: {
   cliente: Cliente;
   nit: string;
   alertas: FilaGestion[];
-  usuarioId: string;
 }) {
   const [factura, setFactura] = useState("");
   const [tipo, setTipo] = useState<string>("llamada");
@@ -68,7 +66,8 @@ export function RegistrarGestion({
     guardar.mutate({
       factura,
       tipo,
-      usuario_id: usuarioId,
+      // El usuario no se envia: el servidor lo toma del token. §10.3 exige un
+      // rastro fiable, y uno que el cliente firma a su gusto no lo es.
       resultado: resultado || null,
       observacion: observacion || null,
       compromiso_fecha: conCompromiso ? compromisoFecha : null,
