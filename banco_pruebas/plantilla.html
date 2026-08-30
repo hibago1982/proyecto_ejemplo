@@ -1,0 +1,507 @@
+<title>Banco de pruebas del motor de cartera</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  /* Paleta del propio producto: la escala de severidad es la de §5.2 de la
+     especificacion y los grises llevan sesgo hacia el azul del acento. */
+  :root {
+    --acento: #2F6B9A;
+    --fondo: #F2F5F8;
+    --superficie: #FFFFFF;
+    --superficie-2: #F8FAFB;
+    --filete: #DFE6EC;
+    --tinta: #131920;
+    --apagado: #566673;
+    --tenue: #8E9CA9;
+    --p0: #2F6B9A;
+    --p1: #B8860B;
+    --p2: #E67E22;
+    --p3: #9B1C1C;
+    --p4: #641220;
+    --sombra: 0 1px 2px rgba(19, 25, 32, .04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --acento: #6FA8D6;
+      --fondo: #0D1218;
+      --superficie: #151C24;
+      --superficie-2: #1A222B;
+      --filete: #263039;
+      --tinta: #E2E9F0;
+      --apagado: #94A3B1;
+      --tenue: #64717E;
+      --p0: #7FB3DC;
+      --p1: #D9A429;
+      --p2: #F09449;
+      --p3: #D65252;
+      --p4: #B04048;
+      --sombra: 0 1px 2px rgba(0, 0, 0, .3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --acento: #6FA8D6;
+    --fondo: #0D1218;
+    --superficie: #151C24;
+    --superficie-2: #1A222B;
+    --filete: #263039;
+    --tinta: #E2E9F0;
+    --apagado: #94A3B1;
+    --tenue: #64717E;
+    --p0: #7FB3DC;
+    --p1: #D9A429;
+    --p2: #F09449;
+    --p3: #D65252;
+    --p4: #B04048;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .3);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--fondo);
+    color: var(--tinta);
+    font: 400 14px/1.5 "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono, .num {
+    font-family: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  :focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: 4px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  .marco { max-width: 1320px; margin: 0 auto; padding: 24px 20px 56px; }
+
+  /* --- Cabecera --- */
+  header.top { border-bottom: 1px solid var(--filete); background: var(--superficie); }
+  header.top .marco { padding-block: 18px 16px; }
+  .marca {
+    font: 600 11px/1 "IBM Plex Mono", monospace;
+    letter-spacing: .18em; color: var(--acento); text-transform: uppercase;
+  }
+  h1 { font-size: 26px; font-weight: 600; letter-spacing: -.02em; margin: 8px 0 4px; text-wrap: balance; }
+  .lead { color: var(--apagado); max-width: 68ch; margin: 0; font-size: 14px; }
+  .aviso {
+    margin-top: 14px; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--filete); background: var(--superficie-2);
+    color: var(--apagado); font-size: 12.5px; max-width: 78ch;
+  }
+  .aviso b { color: var(--tinta); font-weight: 600; }
+
+  /* --- Consola de control --- */
+  .consola {
+    background: var(--superficie); border: 1px solid var(--filete);
+    border-radius: 14px; padding: 16px; box-shadow: var(--sombra);
+    display: grid; gap: 16px; margin-bottom: 14px;
+  }
+  .etiqueta {
+    font: 600 10.5px/1 "IBM Plex Mono", monospace; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--tenue);
+  }
+  .fila-corte { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .fecha-corte { font: 600 22px/1 "IBM Plex Mono", monospace; letter-spacing: -.01em; }
+  .pista { color: var(--tenue); font-size: 12.5px; }
+  input[type="range"] {
+    width: 100%; margin: 10px 0 0; accent-color: var(--acento); height: 22px;
+  }
+  .escala {
+    display: flex; justify-content: space-between;
+    font: 400 10.5px/1 "IBM Plex Mono", monospace; color: var(--tenue); margin-top: 2px;
+  }
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; }
+  .preset {
+    flex: 1 1 200px; text-align: left; cursor: pointer;
+    border: 1px solid var(--filete); background: var(--superficie-2);
+    border-radius: 10px; padding: 9px 11px; color: var(--tinta);
+    font-family: inherit; font-size: 13px; transition: border-color .15s, background .15s;
+  }
+  .preset:hover { border-color: var(--apagado); }
+  .preset[aria-pressed="true"] {
+    border-color: var(--acento); background: color-mix(in srgb, var(--acento) 9%, transparent);
+  }
+  .preset strong { display: block; font-weight: 600; }
+  .preset span { display: block; color: var(--apagado); font-size: 11.5px; margin-top: 2px; }
+
+  /* --- Indicadores --- */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .kpi {
+    background: var(--superficie); border: 1px solid var(--filete);
+    border-radius: 12px; padding: 12px 13px; box-shadow: var(--sombra);
+  }
+  .kpi .v { font: 600 19px/1.15 "IBM Plex Mono", monospace; margin-top: 5px; letter-spacing: -.02em; }
+  .kpi .p { color: var(--tenue); font-size: 11.5px; margin-top: 3px; }
+
+  /* --- Barra de antiguedad --- */
+  .aging { background: var(--superficie); border: 1px solid var(--filete); border-radius: 12px; padding: 14px; box-shadow: var(--sombra); margin-bottom: 14px; }
+  .barra { display: flex; height: 30px; border-radius: 7px; overflow: hidden; margin-top: 10px; background: var(--superficie-2); }
+  .seg { transition: flex-grow .28s ease; min-width: 0; }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 10px; font-size: 11.5px; color: var(--apagado); }
+  .leyenda i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 5px; }
+
+  /* --- Dos columnas --- */
+  .cols { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+  @media (max-width: 940px) { .cols { grid-template-columns: 1fr; } }
+  .panel { background: var(--superficie); border: 1px solid var(--filete); border-radius: 12px; box-shadow: var(--sombra); overflow: hidden; }
+  .panel > h2 {
+    margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--filete);
+    font: 600 10.5px/1 "IBM Plex Mono", monospace; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--tenue);
+  }
+  .panel .cuerpo { padding: 4px 0; }
+  .desplaza { overflow-x: auto; }
+
+  /* --- Libro de facturas --- */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; font: 600 10px/1 "IBM Plex Mono", monospace;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--tenue);
+    padding: 8px 10px; border-bottom: 1px solid var(--filete); white-space: nowrap;
+  }
+  td { padding: 8px 10px; border-bottom: 1px solid color-mix(in srgb, var(--filete) 55%, transparent); }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr { cursor: pointer; transition: background .15s; }
+  tbody tr:hover { background: var(--superficie-2); }
+  tbody tr[aria-selected="true"] { background: color-mix(in srgb, var(--acento) 8%, transparent); }
+  .d { text-align: right; white-space: nowrap; }
+  .rayita { display: inline-block; width: 3px; height: 15px; border-radius: 2px; vertical-align: -3px; margin-right: 7px; }
+  .chip {
+    display: inline-block; border: 1px solid; border-radius: 999px;
+    padding: 1px 7px; font: 600 10.5px/1.5 "IBM Plex Mono", monospace; white-space: nowrap;
+  }
+  .cod { display: inline-block; margin-right: 4px; }
+  .apag { color: var(--tenue); }
+
+  /* --- Alertas --- */
+  .lista { max-height: 560px; overflow-y: auto; }
+  .lista::-webkit-scrollbar { width: 9px; }
+  .lista::-webkit-scrollbar-thumb {
+    background: var(--filete); border-radius: 5px;
+  }
+  .cuenta {
+    float: right; font: 400 10.5px/1 "IBM Plex Mono", monospace;
+    color: var(--tenue); letter-spacing: 0;
+  }
+  .alerta { padding: 10px 14px; border-bottom: 1px solid color-mix(in srgb, var(--filete) 55%, transparent); }
+  .alerta:last-child { border-bottom: 0; }
+  .alerta.opaca { opacity: .3; }
+  .alerta .cab { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .alerta .por {
+    margin-top: 5px; font-size: 12px; color: var(--apagado);
+    font-family: "IBM Plex Mono", monospace; line-height: 1.45;
+  }
+  .alerta .acc { margin-top: 3px; font-size: 12px; color: var(--tenue); }
+  .vacio { padding: 22px 14px; text-align: center; color: var(--tenue); font-size: 13px; }
+
+  /* --- Catalogo de reglas --- */
+  .reglas { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; padding: 12px; }
+  .regla { border: 1px solid var(--filete); border-radius: 10px; padding: 10px 11px; background: var(--superficie-2); }
+  .regla.off { opacity: .55; }
+  .regla .n { display: flex; align-items: baseline; gap: 7px; }
+  .regla .n b { font: 600 13px/1 "IBM Plex Mono", monospace; }
+  .regla .q { font-size: 12px; color: var(--apagado); margin-top: 5px; line-height: 1.45; }
+  .punto { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+  footer { margin-top: 22px; color: var(--tenue); font-size: 12px; line-height: 1.6; }
+  footer code { font-family: "IBM Plex Mono", monospace; color: var(--apagado); }
+</style>
+
+<header class="top">
+  <div class="marco">
+    <p class="marca">Busint · Motor de alertas de cartera</p>
+    <h1>Banco de pruebas del motor</h1>
+    <p class="lead">
+      Mueve la fecha de corte y cambia la configuración de umbrales para ver cómo
+      clasifica el motor. Cada factura recorre los ocho rangos de antigüedad, y
+      cada alerta dice por qué se disparó.
+    </p>
+    <p class="aviso">
+      <b>Estas cifras las calculó el motor real</b>, no una imitación en el
+      navegador. Se corrió <code class="mono">busint_alertas</code> sobre 96
+      escenarios y esta página muestra su salida. Reimplementar las reglas aquí
+      contradiría §16 —una sola fuente de cálculo— y podría enseñarte un
+      comportamiento que el sistema no tiene.
+    </p>
+  </div>
+</header>
+
+<main class="marco">
+  <section class="consola">
+    <div>
+      <p class="etiqueta">Fecha de corte</p>
+      <div class="fila-corte">
+        <span class="fecha-corte" id="fecha">—</span>
+        <span class="pista" id="pista-corte"></span>
+      </div>
+      <input type="range" id="corte" min="0" max="0" value="0"
+             aria-label="Fecha de corte" />
+      <div class="escala"><span id="esc-ini"></span><span id="esc-fin"></span></div>
+    </div>
+    <div>
+      <p class="etiqueta" style="margin-bottom:8px">Configuración de umbrales</p>
+      <div class="presets" id="presets" role="group" aria-label="Configuración"></div>
+    </div>
+  </section>
+
+  <section class="kpis" id="kpis" aria-label="Indicadores"></section>
+
+  <section class="aging">
+    <p class="etiqueta">Antigüedad de cartera</p>
+    <div class="barra" id="barra" role="img" aria-label="Distribución por rango"></div>
+    <div class="leyenda" id="leyenda"></div>
+  </section>
+
+  <div class="cols">
+    <section class="panel">
+      <h2>Facturas del corte · pulsa una para aislar sus alertas</h2>
+      <div class="desplaza">
+        <table>
+          <thead>
+            <tr>
+              <th>Factura</th><th>Cliente</th><th class="d">Días</th>
+              <th>Rango</th><th class="d">Saldo</th><th>Alertas</th>
+            </tr>
+          </thead>
+          <tbody id="libro"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div style="display:grid;gap:14px">
+      <section class="panel">
+        <h2><span id="tit-alertas">Qué disparó</span><span class="cuenta" id="n-alertas"></span></h2>
+        <div id="alertas" class="lista"></div>
+      </section>
+      <section class="panel">
+        <h2>Riesgo por cliente</h2>
+        <div id="clientes" class="lista" style="max-height:320px"></div>
+      </section>
+      <section class="panel">
+        <h2>Reglas sin evaluar</h2>
+        <div id="inactivas"></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="panel" style="margin-top:14px">
+    <h2>Catálogo de reglas · §5.4 y §7</h2>
+    <div class="reglas" id="catalogo"></div>
+  </section>
+
+  <footer>
+    <p>
+      Cartera de prueba: 13 facturas de 2 clientes, con vencimientos fijos entre
+      febrero y septiembre de 2026. Incluye una factura con nota crédito sin
+      aplicar (C-10) y una con saldo negativo, que nunca se clasifica como mora
+      (§5.3, caso T09).
+    </p>
+    <p>
+      Los rangos, colores y prioridades salen de §5.2 de la Especificación
+      Funcional. Las reglas sin umbral asignado no se evalúan: el motor no
+      inventa valores por defecto (C-05), y §16 prohíbe deducirlos de una base
+      de demostración.
+    </p>
+  </footer>
+</main>
+
+<script id="datos" type="application/json">__DATOS__</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById("datos").textContent);
+  const buckets = new Map(D.buckets.map(b => [b.codigo, b]));
+  const base = new Map(D.facturas_base.map(f => [f.factura, f]));
+  const TINTA = ["--p0", "--p1", "--p2", "--p3", "--p4"];
+
+  let preset = D.presets[0].id;
+  let indice = 0;
+  let seleccion = null;
+
+  const $ = id => document.getElementById(id);
+  const color = n => getComputedStyle(document.documentElement)
+    .getPropertyValue(TINTA[n] ?? "--p0").trim();
+
+  const pesos = v => {
+    const n = Math.round(Number(v));
+    return (n < 0 ? "−" : "") + "$ " + Math.abs(n).toLocaleString("es-CO");
+  };
+  const pct = v => Number(v).toLocaleString("es-CO", {
+    minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
+  const fecha = iso => {
+    const [a, m, d] = iso.split("-");
+    return `${d}/${m}/${a}`;
+  };
+  const dias = d => d === 0 ? "vence hoy" : d < 0 ? `faltan ${-d}` : `${d}`;
+
+  const chip = (n, texto) => {
+    const c = color(n);
+    return `<span class="chip" style="color:${c};background:color-mix(in srgb, ${c} 12%, transparent);border-color:color-mix(in srgb, ${c} 30%, transparent)">${texto}</span>`;
+  };
+
+  // --- Controles ---
+  $("presets").innerHTML = D.presets.map(p => `
+    <button type="button" class="preset" data-id="${p.id}"
+            aria-pressed="${p.id === preset}">
+      <strong>${p.nombre}</strong><span>${p.detalle}</span>
+    </button>`).join("");
+  $("presets").addEventListener("click", e => {
+    const b = e.target.closest(".preset");
+    if (!b) return;
+    preset = b.dataset.id;
+    [...$("presets").children].forEach(x =>
+      x.setAttribute("aria-pressed", String(x.dataset.id === preset)));
+    pintar();
+  });
+
+  const rango = $("corte");
+  rango.max = String(D.cortes.length - 1);
+  rango.addEventListener("input", () => { indice = +rango.value; pintar(); });
+  $("esc-ini").textContent = fecha(D.cortes[0]);
+  $("esc-fin").textContent = fecha(D.cortes.at(-1));
+
+  // --- Pintado ---
+  function pintar() {
+    const e = D.escenarios[preset][indice];
+    const g = e.globales;
+
+    $("fecha").textContent = fecha(e.corte);
+    const nAlertas = e.alertas.length;
+    $("pista-corte").textContent =
+      `${nAlertas} ${nAlertas === 1 ? "alerta" : "alertas"} · ` +
+      `${e.facturas.filter(f => f.b).length} facturas con saldo deudor`;
+
+    $("kpis").innerHTML = [
+      ["Cartera total", g.cartera_total, null],
+      ["Por vencer", g.por_vencer, g.cartera_total],
+      ["Vence hoy", g.vence_hoy, g.cartera_total],
+      ["Vencida", g.vencida, g.cartera_total],
+      ["Más de 90 días", g.mayor_90, g.cartera_total],
+    ].map(([et, v, tot]) => `
+      <div class="kpi">
+        <p class="etiqueta">${et}</p>
+        <p class="v">${pesos(v)}</p>
+        <p class="p">${tot ? pct(Number(v) / Number(tot) * 100) + " del total" : "&nbsp;"}</p>
+      </div>`).join("");
+
+    const total = Number(g.cartera_total) || 1;
+    $("barra").innerHTML = D.buckets.map(b => {
+      const s = Number(e.por_bucket[b.codigo] ?? 0);
+      return s <= 0 ? "" :
+        `<div class="seg" style="flex-grow:${s / total};background:${b.color}"
+              title="${b.etiqueta}: ${pesos(s)}"></div>`;
+    }).join("");
+    $("leyenda").innerHTML = D.buckets.map(b => {
+      const s = Number(e.por_bucket[b.codigo] ?? 0);
+      return `<span style="${s > 0 ? "" : "opacity:.35"}">
+        <i style="background:${b.color}"></i>${b.etiqueta}
+        <span class="num apag">${s > 0 ? pesos(s) : "—"}</span></span>`;
+    }).join("");
+
+    $("libro").innerHTML = e.facturas.map(f => {
+      const b = f.b ? buckets.get(f.b) : null;
+      const est = base.get(f.f);
+      const nombre = D.clientes[est.cliente] ?? est.cliente;
+      return `<tr data-f="${f.f}" aria-selected="${seleccion === f.f}">
+        <td><span class="mono">${f.f}</span>
+            ${Number(est.credito_aplicado) > 0
+              ? `<div class="apag" style="font-size:11px">bruto ${pesos(est.saldo_bruto)} − crédito ${pesos(est.credito_aplicado)}</div>`
+              : ""}</td>
+        <td style="font-size:12px">${nombre}</td>
+        <td class="d num">${dias(f.d)}</td>
+        <td>${b
+            ? `<span class="rayita" style="background:${b.color}"></span>${b.etiqueta}`
+            : `<span class="apag">${est.sin_bucket}</span>`}</td>
+        <td class="d num">${pesos(est.saldo)}</td>
+        <td>${f.a.length
+            ? f.a.map(c => `<span class="cod mono">${c}</span>`).join("")
+            : `<span class="apag">—</span>`}</td>
+      </tr>`;
+    }).join("");
+
+    const orden = [...e.alertas].sort((a, b) =>
+      b.prioridad - a.prioridad || a.codigo.localeCompare(b.codigo));
+    $("tit-alertas").textContent = seleccion
+      ? `Qué disparó · aislando ${seleccion}`
+      : "Qué disparó";
+    $("n-alertas").textContent = orden.length
+      ? `${orden.length} ${orden.length === 1 ? "alerta" : "alertas"}`
+      : "";
+    $("alertas").innerHTML = orden.length ? orden.map(a => {
+      const opaca = seleccion && a.factura !== seleccion;
+      return `<div class="alerta ${opaca ? "opaca" : ""}">
+        <div class="cab">
+          <span class="mono" style="font-weight:600">${a.codigo}</span>
+          <span>${a.etiqueta}</span>
+          ${chip(a.prioridad, a.prioridad_etiqueta)}
+          <span class="apag mono" style="font-size:11.5px;margin-left:auto">
+            ${a.factura ?? "del cliente"}</span>
+        </div>
+        <p class="por">${a.explicacion}</p>
+        ${a.elevada_por?.length
+          ? `<p class="por" style="color:var(--p2)">prioridad elevada · ${a.elevada_por.join(" · ")}</p>`
+          : ""}
+        <p class="acc">→ ${a.accion}</p>
+      </div>`;
+    }).join("") : `<p class="vacio">Ninguna alerta con esta configuración.</p>`;
+
+    const marc = e.marcadores.reduce((m, x) => {
+      (m[x.cliente] ??= []).push(x); return m; }, {});
+    $("clientes").innerHTML = Object.entries(e.clientes).map(([nit, c]) => `
+      <div class="alerta">
+        <div class="cab">
+          <span style="font-weight:600">${c.nombre}</span>
+          ${chip(c.prioridad, c.prioridad_etiqueta)}
+        </div>
+        <p class="por">
+          cartera ${pesos(c.cartera_total)} · vencida ${pct(c.pct_vencida)} ·
+          &gt;90 ${pct(c.pct_90)} · ${c.n_vencidas} facturas vencidas ·
+          máx ${c.dias_max} d
+        </p>
+        ${(marc[nit] ?? []).map(m =>
+          `<p class="acc"><span class="mono">${m.codigo}</span> ${m.etiqueta} — ${m.explicacion}</p>`).join("")}
+      </div>`).join("");
+
+    const inact = Object.entries(e.reglas_inactivas);
+    $("inactivas").innerHTML = inact.length ? inact.map(([cod, motivo]) => `
+      <div class="alerta">
+        <div class="cab"><span class="mono" style="font-weight:600">${cod}</span></div>
+        <p class="por">${motivo}</p>
+      </div>`).join("")
+      : `<p class="vacio">Todas las reglas se están evaluando.</p>`;
+
+    const activos = D.presets.find(p => p.id === preset).parametros;
+    $("catalogo").innerHTML = D.reglas.map(r => {
+      const falta = r.parametros.filter(p => !(p in activos));
+      const viva = falta.length === 0;
+      const emite = r.alerta ? `emite ${r.alerta}`
+        : r.marcador ? `marca ${r.marcador}`
+        : r.eleva_prioridad ? `eleva la prioridad ${r.eleva_prioridad} nivel` : "";
+      return `<div class="regla ${viva ? "" : "off"}">
+        <div class="n">
+          <span class="punto" style="background:${viva ? "var(--acento)" : "var(--tenue)"}"></span>
+          <b>${r.codigo}</b><span style="font-size:12.5px">${r.etiqueta}</span>
+        </div>
+        <p class="q">
+          ámbito ${r.ambito}${emite ? " · " + emite : ""}<br>
+          ${r.parametros.length
+            ? r.parametros.map(p => `<span class="mono">${p}</span> = ${activos[p] ?? "<em>sin asignar</em>"}`).join("<br>")
+            : "sin parámetros configurables"}
+        </p>
+      </div>`;
+    }).join("");
+  }
+
+  $("libro").addEventListener("click", ev => {
+    const tr = ev.target.closest("tr[data-f]");
+    if (!tr) return;
+    seleccion = seleccion === tr.dataset.f ? null : tr.dataset.f;
+    pintar();
+    // Con la lista desplazable, aislar sin llevar la vista a la primera alerta
+    // visible dejaria al usuario mirando un hueco opaco.
+    const primera = $("alertas").querySelector(".alerta:not(.opaca)");
+    if (seleccion && primera) {
+      $("alertas").scrollTop = primera.offsetTop - $("alertas").offsetTop - 8;
+    }
+  });
+
+  pintar();
+})();
+</script>

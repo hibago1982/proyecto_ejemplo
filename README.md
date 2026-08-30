@@ -255,6 +255,17 @@ caminos es lo que evita que el corte nocturno dé un resultado distinto al que s
 ve en pantalla. Un fallo en una empresa no detiene a las demás, y queda en
 `ar_ejecucion`.
 
+## Banco de pruebas
+
+`banco_pruebas/index.html` es una página interactiva para explorar el motor: se
+mueve la fecha de corte, se cambia la configuración de umbrales y se ve qué
+dispara cada factura y por qué.
+
+No reimplementa las reglas. `herramientas/generar_banco_pruebas.py` corre el
+motor real sobre 96 escenarios y la página muestra su salida; una copia de las
+reglas en JavaScript contradiría §16 y podría enseñar un comportamiento que el
+sistema no tiene.
+
 ## Probarlo entero
 
 ```bash
