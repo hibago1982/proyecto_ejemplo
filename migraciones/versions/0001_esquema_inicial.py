@@ -233,7 +233,15 @@ def _activar_seguridad_por_fila() -> None:
     El motor ya filtra por empresa, pero una consulta futura mal escrita en el
     API no deberia poder devolver la cartera de otro cliente.
     """
-    op.execute("CREATE ROLE busint_app NOLOGIN")
+    # Los roles de PostgreSQL son del cluster, no de la base. Crearlo sin
+    # condicion hacia que la migracion funcionara en la primera base y fallara
+    # en cualquier segunda: un entorno de pruebas junto al de produccion, o
+    # simplemente recrear la base, rompian con "role already exists".
+    op.execute(
+        "DO $$ BEGIN "
+        "IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'busint_app') "
+        "THEN CREATE ROLE busint_app NOLOGIN; END IF; END $$"
+    )
     for tabla in TABLAS_MULTIEMPRESA:
         op.execute(f"ALTER TABLE {tabla} ENABLE ROW LEVEL SECURITY")
         op.execute(
@@ -248,6 +256,8 @@ def downgrade() -> None:
             op.execute(f"DROP POLICY IF EXISTS aislamiento_empresa ON {tabla}")
             op.execute(f"ALTER TABLE {tabla} DISABLE ROW LEVEL SECURITY")
         op.execute("DROP INDEX IF EXISTS ix_alert_rule_parametros")
-        op.execute("DROP ROLE IF EXISTS busint_app")
+        # El rol NO se borra: es del cluster y otras bases del mismo servidor
+        # pueden tener politicas que dependan de el. Deshacer esta base no
+        # deberia tumbar las demas.
     for tabla in reversed(TABLAS):
         op.drop_table(tabla)

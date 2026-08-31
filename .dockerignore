@@ -1,0 +1,15 @@
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+node_modules
+frontend/dist
+frontend/node_modules
+*.png
+*.pdf
+*.xlsx
+!tests/datos/*.xlsx
+datos/*
+!datos/.gitkeep

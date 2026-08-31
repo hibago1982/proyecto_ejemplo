@@ -36,7 +36,8 @@ desde aqui:
 
 | Pendiente | Por que sigue abierto |
 |-----------|----------------------|
-| **PostgreSQL nunca se ha ejecutado** | Todo se probo sobre SQLite. El DDL exclusivo de PG (JSONB, indice GIN, `CREATE POLICY`, el rol `busint_app`) esta escrito y jamas ha corrido. Es lo primero que hay que hacer antes de un piloto. |
+| ~~PostgreSQL nunca se ha ejecutado~~ | **Cerrado.** Verificado contra PostgreSQL 16.13: las cuatro migraciones, JSONB en las cuatro columnas, el indice GIN, las nueve politicas de seguridad por fila, el rol, la restriccion unica de C-17 en el reproceso, los roles, el Excel, el PDF y el registro de gestiones. Aparecieron dos defectos: el rol se creaba sin condicion y rompia en cualquier segunda base del mismo cluster, y dos columnas JSON quedaron sin convertir a JSONB. |
+| **Las imagenes Docker no se han construido** | El contenedor donde se preparo el paquete no tiene demonio de Docker. Cada paso del `Dockerfile` se verifico por separado, pero `docker compose up` no se ha ejecutado nunca. |
 | **Umbrales monetarios reales** | R01 y R02 se activan solas cuando la empresa los fije. §16 prohibe deducirlos de la base de demostracion. |
 | **`dias_sin_gestion` de A12** | Igual: la regla ya funciona, le falta el valor. |
 | **C-10 contra datos reales** | La logica de notas credito nunca se ha corrido contra un extracto que las traiga; el archivo de prueba tiene la columna en cero. |

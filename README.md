@@ -277,6 +277,21 @@ Importa `busint_alertas.motores.cartera` directamente, así que es la versión a
 la que hay que creerle si las dos discrepan. Detalles en
 `banco_pruebas/README.md`.
 
+## Montarlo en un servidor
+
+Ver **[DESPLIEGUE.md](DESPLIEGUE.md)**. En corto, con Docker:
+
+```bash
+cp .env.ejemplo .env      # genera BUSINT_CLAVE_FIRMA y cambia POSTGRES_PASSWORD
+docker compose up --build
+docker compose exec api python -m busint_alertas.cli sembrar E01
+docker compose exec -e BUSINT_CLAVE_USUARIO=... api \
+  python -m busint_alertas.cli usuario crear admin E01 administrador
+docker compose exec api python -m busint_alertas.cli ejecutar E01
+```
+
+Panel en `:8080`, API en `:8000`.
+
 ## Probarlo entero
 
 ```bash

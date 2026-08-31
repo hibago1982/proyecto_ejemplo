@@ -1,0 +1,61 @@
+# Despliegue de prueba completo: PostgreSQL, migraciones, API y panel.
+#
+#   cp .env.ejemplo .env    # y edita BUSINT_CLAVE_FIRMA
+#   docker compose up --build
+#
+# El panel queda en http://localhost:8080 y el API en http://localhost:8000.
+
+services:
+  base:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: busint
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: busint_alertas
+    volumes:
+      - datos:/var/lib/postgresql/data
+    healthcheck:
+      # Las migraciones no deben empezar antes de que la base acepte conexiones.
+      test: ["CMD-SHELL", "pg_isready -U busint -d busint_alertas"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migraciones:
+    build: .
+    depends_on:
+      base: { condition: service_healthy }
+    environment:
+      BUSINT_DB_URL: postgresql+psycopg://busint:${POSTGRES_PASSWORD}@base/busint_alertas
+    command: alembic upgrade head
+    restart: "no"
+
+  api:
+    build: .
+    depends_on:
+      migraciones: { condition: service_completed_successfully }
+    environment:
+      BUSINT_DB_URL: postgresql+psycopg://busint:${POSTGRES_PASSWORD}@base/busint_alertas
+      BUSINT_CLAVE_FIRMA: ${BUSINT_CLAVE_FIRMA:?define BUSINT_CLAVE_FIRMA en .env}
+      BUSINT_ORIGEN: ${BUSINT_ORIGEN:-excel}
+      BUSINT_ARCHIVO: ${BUSINT_ARCHIVO:-/datos/cartera.xlsx}
+      BUSINT_ERP_URL: ${BUSINT_ERP_URL:-}
+      BUSINT_ERP_TOKEN: ${BUSINT_ERP_TOKEN:-}
+      BUSINT_PROGRAMAR: ${BUSINT_PROGRAMAR:-0}
+      BUSINT_EMPRESAS: ${BUSINT_EMPRESAS:-}
+      BUSINT_HORA_CORTE: ${BUSINT_HORA_CORTE:-5}
+    volumes:
+      - ./datos:/datos:ro
+    ports:
+      - "8000:8000"
+
+  panel:
+    build:
+      context: .
+      dockerfile: despliegue/Dockerfile.panel
+    depends_on: [api]
+    ports:
+      - "8080:80"
+
+volumes:
+  datos:

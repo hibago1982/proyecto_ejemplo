@@ -13,6 +13,7 @@ de prueba y desplegar contra el ERP con la misma logica.
 
 from .api import FuenteAPI, Transporte, TransporteHTTP
 from .base import ErrorDeOrigen, FuenteDatos, MapeoCampos, construir_movimiento, normalizar
+from .entorno import construir_fuente
 from .planos import MAPEO_BUSINT, FuenteCSV, FuenteExcel
 
 __all__ = [
@@ -25,6 +26,7 @@ __all__ = [
     "MapeoCampos",
     "Transporte",
     "TransporteHTTP",
+    "construir_fuente",
     "construir_movimiento",
     "normalizar",
 ]
