@@ -58,6 +58,9 @@ export BUSINT_DB_URL="postgresql+psycopg://busint:CLAVE@localhost/busint_alertas
 export BUSINT_CLAVE_FIRMA="$(python -c 'import secrets;print(secrets.token_urlsafe(48))')"
 export BUSINT_ORIGEN=excel
 export BUSINT_ARCHIVO=/ruta/a/cartera.xlsx
+# para una primera prueba sin datos reales, el paquete trae una cartera
+# sintetica de 120 filas y 30 clientes:
+# export BUSINT_ARCHIVO=$PWD/tests/datos/cartera_busint_sintetica.xlsx
 
 alembic upgrade head
 python -m busint_alertas.cli sembrar E01

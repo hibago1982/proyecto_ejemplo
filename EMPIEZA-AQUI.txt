@@ -14,6 +14,9 @@ ARRANQUE MAS RAPIDO (Docker)
   cp .env.ejemplo .env
   python -c "import secrets; print(secrets.token_urlsafe(48))"   -> BUSINT_CLAVE_FIRMA
   cp tu_cartera.xlsx datos/cartera.xlsx
+      (para una primera prueba sin datos reales:
+       cp tests/datos/cartera_busint_sintetica.xlsx datos/cartera.xlsx
+       son 120 filas y 30 clientes sinteticos)
   docker compose up --build
 
   docker compose exec api python -m busint_alertas.cli sembrar E01
