@@ -7,3 +7,7 @@ dist/
 .venv/
 venv/
 .env
+
+# Paquete de despliegue: artefacto derivado del propio repositorio.
+# Se reconstruye con herramientas/armar_paquete.sh
+busint-motor-alertas.tar.gz
