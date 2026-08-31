@@ -1,0 +1,20 @@
+# Lo que no viaja en el paquete de despliegue.
+#
+# `git archive` respeta export-ignore, asi que el paquete se define aqui de
+# forma declarativa en vez de a base de borrados en el guion, que es donde se
+# olvidan las cosas.
+
+# El ejercicio de bootcamp con el que nacio el repositorio. Se conserva en el
+# historial, pero no pinta nada en un despliegue del motor.
+GITHUB_FINAL.ipynb   export-ignore
+reporte_dia1.txt     export-ignore
+
+# Salidas de ejemplo generadas durante las pruebas.
+cartera.pdf          export-ignore
+cartera.xlsx         export-ignore
+
+# Las capturas van agrupadas en capturas/, no sueltas en la raiz.
+*.png                export-ignore
+
+# Configuracion del propio repositorio.
+.gitattributes       export-ignore

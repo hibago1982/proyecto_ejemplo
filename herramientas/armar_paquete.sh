@@ -33,12 +33,20 @@ fi
 mkdir -p "$TEMPORAL/$NOMBRE/frontend/dist"
 cp -r frontend/dist/. "$TEMPORAL/$NOMBRE/frontend/dist/"
 
-# Las capturas se agrupan aparte para no dejarlas sueltas en la raiz.
+# Las capturas se agrupan en capturas/. Lo que NO entra en el paquete se
+# declara en .gitattributes con export-ignore, no a base de borrados aqui:
+# un borrado que se olvida no se nota hasta que alguien abre el paquete.
 mkdir -p "$TEMPORAL/$NOMBRE/capturas"
 for imagen in final_panel gestion lista app streamlit; do
     [[ -f "$imagen.png" ]] && cp "$imagen.png" "$TEMPORAL/$NOMBRE/capturas/"
 done
-rm -f "$TEMPORAL/$NOMBRE"/*.png
+
+# EMPIEZA-AQUI.txt viaja versionado en el repositorio, no se genera aqui: si
+# se generara, cambiarlo exigiria editar un guion de empaquetado.
+if [[ ! -f "$TEMPORAL/$NOMBRE/EMPIEZA-AQUI.txt" ]]; then
+    echo "Falta EMPIEZA-AQUI.txt en el paquete." >&2
+    exit 1
+fi
 
 tar -czf "$DESTINO" -C "$TEMPORAL" "$NOMBRE"
 echo "$DESTINO ($(du -h "$DESTINO" | cut -f1))"

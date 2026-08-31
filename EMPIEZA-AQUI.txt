@@ -1,0 +1,42 @@
+BUSINT · MOTOR DE ALERTAS DE CARTERA
+====================================
+
+Paquete completo para montar en un servidor y probar en vivo.
+
+QUE LEER PRIMERO
+----------------
+  DESPLIEGUE.md    como montarlo. Empieza por ahi.
+  README.md        que hace el sistema y como esta construido.
+  docs/            las 18 decisiones del analisis y lo que queda abierto.
+
+ARRANQUE MAS RAPIDO (Docker)
+----------------------------
+  cp .env.ejemplo .env
+  python -c "import secrets; print(secrets.token_urlsafe(48))"   -> BUSINT_CLAVE_FIRMA
+  cp tu_cartera.xlsx datos/cartera.xlsx
+  docker compose up --build
+
+  docker compose exec api python -m busint_alertas.cli sembrar E01
+  docker compose exec -e BUSINT_CLAVE_USUARIO=una-clave-larga api \
+    python -m busint_alertas.cli usuario crear admin E01 administrador
+  docker compose exec api python -m busint_alertas.cli ejecutar E01
+
+  Panel: http://localhost:8080     API: http://localhost:8000/docs
+
+SIN INSTALAR NADA
+-----------------
+  banco_pruebas/index.html   abrelo en el navegador. Cartera editable,
+                             fecha de corte libre, umbrales a mano.
+
+LO QUE HAY QUE SABER
+--------------------
+  R01, R02 y A12 nacen APAGADAS y solo se encienden cuando les asignas
+  umbral. Es deliberado: el motor no inventa valores por defecto (C-05) y
+  §16 prohibe deducirlos de una base de demostracion. Si al primer corte
+  ves "reglas sin evaluar", no esta roto.
+
+  Verificado contra PostgreSQL 16 real. NO verificado: la construccion de
+  las imagenes Docker, y la conexion al API del ERP, que aun no existe.
+  Detalles al final de DESPLIEGUE.md.
+
+  414 pruebas:  pip install -e ".[dev]" && pytest
